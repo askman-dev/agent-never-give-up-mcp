@@ -21,6 +21,30 @@ import type {
 } from "./types/scenarios";
 
 /**
+ * Interface for MCP sampling message content.
+ */
+interface SamplingMessageContent {
+	type: "text";
+	text: string;
+}
+
+/**
+ * Interface for MCP sampling result.
+ */
+interface SamplingResult {
+	content?: SamplingMessageContent;
+}
+
+/**
+ * Interface for server with potential sampling support.
+ */
+interface ServerWithSampling {
+	sampling?: {
+		createMessage: (params: unknown) => Promise<SamplingResult>;
+	};
+}
+
+/**
  * All valid scenario IDs for validation.
  */
 const SCENARIO_IDS: [ScenarioId, ...ScenarioId[]] = [
@@ -147,10 +171,12 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 
 				// Try to use MCP sampling if available
 				try {
-					// Check if sampling is supported
+					// Check if sampling is supported by casting to the extended interface
+					const serverWithSampling = this
+						.server as unknown as ServerWithSampling;
 					if (
-						this.server &&
-						typeof (this.server as any).sampling?.createMessage === "function"
+						serverWithSampling &&
+						typeof serverWithSampling.sampling?.createMessage === "function"
 					) {
 						const samplingParams = {
 							messages: [
@@ -179,9 +205,8 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 							},
 						};
 
-						const samplingResult = await (
-							this.server as any
-						).sampling.createMessage(samplingParams);
+						const samplingResult =
+							await serverWithSampling.sampling.createMessage(samplingParams);
 						const rawText =
 							samplingResult?.content?.type === "text"
 								? samplingResult.content.text
@@ -253,16 +278,21 @@ function parseQuestionsFromSamplingResponse(
 		// Try to extract JSON from the response
 		const jsonMatch = rawText.match(/\{[\s\S]*"questions"[\s\S]*\}/);
 		if (jsonMatch) {
-			const parsed = JSON.parse(jsonMatch[0]);
+			const parsed = JSON.parse(jsonMatch[0]) as {
+				questions?: Array<{
+					id?: string;
+					text?: string;
+					type?: string;
+					options?: Array<{ id: string; label: string }>;
+				}>;
+			};
 			if (Array.isArray(parsed.questions)) {
-				return parsed.questions
-					.slice(0, maxQuestions)
-					.map((q: any, idx: number) => ({
-						id: q.id || `q${idx + 1}`,
-						text: q.text || String(q),
-						type: q.type || "free-text",
-						options: q.options,
-					}));
+				return parsed.questions.slice(0, maxQuestions).map((q, idx) => ({
+					id: q.id || `q${idx + 1}`,
+					text: q.text || String(q),
+					type: (q.type as ClarifyingQuestion["type"]) || "free-text",
+					options: q.options,
+				}));
 			}
 		}
 	} catch {

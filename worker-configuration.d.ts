@@ -488,7 +488,7 @@ declare const performance: Performance;
 declare const Cloudflare: Cloudflare;
 declare const origin: string;
 declare const navigator: Navigator;
-type TestController = {}
+type TestController = {};
 interface ExecutionContext<Props = unknown> {
 	waitUntil(promise: Promise<any>): void;
 	passThroughOnException(): void;
@@ -626,7 +626,7 @@ interface DurableObjectNamespaceGetDurableObjectOptions {
 }
 type DurableObjectClass<
 	_T extends Rpc.DurableObjectBranded | undefined = undefined,
-> = {}
+> = {};
 interface DurableObjectState<Props = unknown> {
 	waitUntil(promise: Promise<any>): void;
 	readonly props: Props;
@@ -3138,7 +3138,7 @@ interface TraceItem {
 interface TraceItemAlarmEventInfo {
 	readonly scheduledTime: Date;
 }
-type TraceItemCustomEventInfo = {}
+type TraceItemCustomEventInfo = {};
 interface TraceItemScheduledEventInfo {
 	readonly scheduledTime: number;
 	readonly cron: string;
@@ -10712,7 +10712,7 @@ declare abstract class D1PreparedStatement {
 // but this will ensure type checking on older versions still passes.
 // TypeScript's interface merging will ensure our empty interface is effectively
 // ignored when `Disposable` is included in the standard lib.
-type Disposable = {}
+type Disposable = {};
 /**
  * An email message that can be sent from a Worker.
  */
@@ -11431,7 +11431,7 @@ declare namespace Cloudflare {
 	// will merge all declarations.
 	//
 	// You can use `wrangler types` to generate the `Env` type automatically.
-	type Env = {}
+	type Env = {};
 	// Project-specific parameters used to inform types.
 	//
 	// This interface is, again, intended to be declared in project-specific files, and then that
@@ -11450,7 +11450,7 @@ declare namespace Cloudflare {
 	//     }
 	//
 	// You can use `wrangler types` to generate `GlobalProps` automatically.
-	type GlobalProps = {}
+	type GlobalProps = {};
 	// Evaluates to the type of a property in GlobalProps, defaulting to `Default` if it is not
 	// present.
 	type GlobalProp<K extends string, Default> = K extends keyof GlobalProps
