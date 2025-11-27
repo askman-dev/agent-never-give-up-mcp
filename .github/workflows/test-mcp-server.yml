@@ -1,0 +1,40 @@
+name: Test MCP Server
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  test-mcp-server:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      ANTHROPIC_API_KEY: ""
+      ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+      ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+      MCP_SERVER_URL: ${{ vars.MCP_SERVER_URL || 'https://agent-never-give-up-mcp.mcp-testing.workers.dev/sse' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run MCP Server Test
+        env:
+          ANTHROPIC_API_KEY: ""
+          ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
+          ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+          MCP_SERVER_URL: ${{ vars.MCP_SERVER_URL || 'https://agent-never-give-up-mcp.mcp-testing.workers.dev/sse' }}
+        run: npx tsx tests/test-mcp-server.ts
