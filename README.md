@@ -1,21 +1,66 @@
 # Agent Never Give Up MCP
 
-A **remote MCP (Model Context Protocol) server** hosted on Cloudflare Workers that provides **predefined and sampling-based "auto-prompts"** for stuck AI agents.
+This is a MCP server that acts as a "escape guide" for AI coding agents. 
 
-## Overview
+It provides structured thinking protocols to help agents unstuck themselves without human help.
 
-This server exposes tools that help AI agents recover from common stuck situations, such as:
+The diagram below illustrates when an agent should call this server and what it receives in return:
 
-- **logic_is_too_complex** – when the agent is looping or over-complicating reasoning
-- **bug_fix_always_failed** – when repeated attempts to fix a bug fail
-- **analysis_too_long** – when the agent is spending too much time analyzing
-- **missing_requirements** – when requirements are unclear or missing
-- **unclear_acceptance_criteria** – when the agent doesn't know what "done" looks like
+```mermaid
+graph TD
+    %% 1. The Normal Loop
+    UserLoop["<b>User Query & Agent Loop</b><br/>(Claude Code / Windsurf / Cursor)<br/>Agent executing tasks..."]
 
-The server does not detect these situations itself – the host/agent decides when to call the tools. The server only:
+    %% 2. The Problem (Triggers)
+    subgraph Triggers ["Agent Gets Stuck (Trigger State)"]
+        direction TB
+        S1["Circular Reasoning"]
+        S2["Bug Fix Fails"]
+        S3["Missing Info"]
+        S4["Analysis Paralysis"]
+        S5["Unclear 'Done' State"]
+    end
 
-1. Returns **static prompt templates** for a given scenario
-2. Uses **MCP sampling** to generate **clarifying questions** (when the client supports it)
+    %% Flow: Loop -> Stuck
+    UserLoop -.->|"⚠️ Detects Issue<br/>(Inner Loop Stall)"| Triggers
+
+    %% 3. The Solution (MCP Call)
+    subgraph MCP ["Agent Never Give Up MCP"]
+        direction TB
+        T1(logic_is_too_complex)
+        T2(bug_fix_always_failed)
+        T3(missing_requirements)
+        T4(analysis_too_long)
+        T5(unclear_acceptance_criteria)
+    end
+
+    %% Mapping Triggers to Tools
+    S1 -->|Call| T1
+    S2 -->|Call| T2
+    S3 -->|Call| T3
+    S4 -->|Call| T4
+    S5 -->|Call| T5
+
+    %% 4. The Response
+    MCP -->|Returns| R1["<b>Metacognitive Protocol</b><br/>Structured markdown to:<br/>1. Re-anchor goal<br/>2. Summarize failures<br/>3. Propose NEW strategy"]
+
+    %% 5. The Outcome
+    R1 --> Result["<b>Autonomous Recovery</b><br/>Agent unblocks itself &<br/>resumes execution<br/>(No Human Hand-off)"]
+
+    %% Cycle back to loop
+    Result -.->|"Resumes Loop"| UserLoop
+
+    %% Styling
+    classDef loop fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
+    classDef trigger fill:#ffebee,stroke:#b71c1c,stroke-width:2px;
+    classDef tool fill:#fff3e0,stroke:#e65100,stroke-width:2px;
+    classDef response fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
+    
+    class UserLoop loop;
+    class S1,S2,S3,S4,S5 trigger;
+    class T1,T2,T3,T4,T5 tool;
+    class R1,Result response;
+```
 
 ## Features
 
