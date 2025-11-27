@@ -70,26 +70,16 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 		// Tool 1: list_scenarios
 		this.server.tool(
 			"list_scenarios",
-			"List available stuck-agent scenarios and supported languages.",
+			"List available stuck-agent scenarios.",
 			{},
 			async () => {
 				const result: ListScenariosResult = {
 					scenarios: getAllScenarioIds().map((id) => {
-						const templates = SCENARIO_TEMPLATES[id];
-						const languages = templates.map((t) => t.language);
-						const titleByLanguage: Record<string, string> = {};
-						const descriptionByLanguage: Record<string, string> = {};
-
-						for (const template of templates) {
-							titleByLanguage[template.language] = template.title;
-							descriptionByLanguage[template.language] = template.description;
-						}
-
+						const template = SCENARIO_TEMPLATES[id];
 						return {
 							id,
-							languages,
-							titleByLanguage,
-							descriptionByLanguage,
+							title: template.title,
+							description: template.description,
 						};
 					}),
 				};
@@ -108,14 +98,9 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 				scenario: z
 					.enum(SCENARIO_IDS)
 					.describe("The scenario ID to get the prompt for"),
-				language: z
-					.string()
-					.optional()
-					.default("en")
-					.describe("BCP-47 language tag, defaults to 'en'."),
 			},
-			async ({ scenario, language }) => {
-				const template = getTemplate(scenario, language);
+			async ({ scenario }) => {
+				const template = getTemplate(scenario);
 
 				if (!template) {
 					return {
@@ -158,14 +143,9 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 					.optional()
 					.default(3)
 					.describe("Maximum number of questions to generate"),
-				language: z
-					.string()
-					.optional()
-					.default("en")
-					.describe("BCP-47 language tag for the questions, defaults to 'en'."),
 			},
-			async ({ scenario, contextSummary, maxQuestions, language }) => {
-				const template = getTemplate(scenario, language);
+			async ({ scenario, contextSummary, maxQuestions }) => {
+				const template = getTemplate(scenario);
 				const templateSummary = template
 					? `${template.title}: ${template.description}`
 					: `Scenario: ${scenario}`;
@@ -190,12 +170,11 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 											templateSummary,
 											contextSummary,
 											maxQuestions,
-											language,
 										}),
 									},
 								},
 							],
-							systemPrompt: buildSamplingSystemPrompt({ scenario, language }),
+							systemPrompt: buildSamplingSystemPrompt({ scenario }),
 							maxTokens: 512,
 							includeContext: "none" as const,
 							modelPreferences: {
@@ -220,7 +199,6 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 
 						const result: ClarifyingQuestionsResult = {
 							scenario,
-							language,
 							questions,
 							rawSamplingResponse: rawText,
 						};
@@ -244,12 +222,10 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 					scenario,
 					template,
 					contextSummary,
-					language,
 				);
 
 				const result: ClarifyingQuestionsResult = {
 					scenario,
-					language,
 					questions: fallbackQuestions,
 					rawSamplingResponse:
 						"Sampling not available - using fallback questions",
@@ -318,10 +294,9 @@ function generateFallbackQuestions(
 	scenario: ScenarioId,
 	template: ReturnType<typeof getTemplate>,
 	contextSummary: string,
-	language: string,
 ): ClarifyingQuestion[] {
 	// First try to get questions from markdown definitions
-	const markdownQuestions = getFallbackQuestions(scenario, language);
+	const markdownQuestions = getFallbackQuestions(scenario);
 	if (markdownQuestions.length > 0) {
 		// Optionally incorporate contextSummary into the first question
 		if (contextSummary && markdownQuestions.length > 0) {
@@ -329,23 +304,17 @@ function generateFallbackQuestions(
 			// Add context reference to make questions more specific
 			markdownQuestions[0] = {
 				...firstQuestion,
-				text:
-					language === "zh-CN"
-						? `基于以下情况：「${contextSummary.slice(0, 100)}...」${firstQuestion.text}`
-						: `Given the context: "${contextSummary.slice(0, 100)}..." ${firstQuestion.text}`,
+				text: `Given the context: "${contextSummary.slice(0, 100)}..." ${firstQuestion.text}`,
 			};
 		}
 		return markdownQuestions;
 	}
 
 	// Fallback: If template has guidance bullets, use them to form questions
-	const isZhCN = language === "zh-CN";
 	if (template?.guidanceBullets && template.guidanceBullets.length > 0) {
 		return template.guidanceBullets.slice(0, 3).map((bullet, idx) => ({
 			id: `q${idx + 1}`,
-			text: isZhCN
-				? `关于"${bullet}"，你能提供更多信息吗？`
-				: `Regarding "${bullet}", can you provide more details?`,
+			text: `Regarding "${bullet}", can you provide more details?`,
 			type: "free-text" as const,
 		}));
 	}
@@ -354,9 +323,7 @@ function generateFallbackQuestions(
 	return [
 		{
 			id: "q1",
-			text: isZhCN
-				? "你能更详细地描述这个问题吗？"
-				: "Can you describe this problem in more detail?",
+			text: "Can you describe this problem in more detail?",
 			type: "free-text" as const,
 		},
 	];

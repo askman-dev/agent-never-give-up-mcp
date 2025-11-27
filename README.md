@@ -24,7 +24,6 @@ The server does not detect these situations itself – the host/agent decides wh
   - `list_scenarios` – discover available scenarios
   - `get_static_prompt` – get static prompt templates
   - `generate_clarifying_questions` – generate dynamic questions using MCP sampling
-- **Multi-language support** (English and Chinese)
 - **Community-contributed prompts** via markdown files
 - **Public and auth-less** (v0)
 - **Cloudflare Workers deployment**
@@ -73,62 +72,32 @@ prompts/
 
 ### Prompt File Format
 
-Each `tool.md` file follows the GitHub Copilot Agent markdown format with YAML frontmatter:
+Each `tool.md` file follows a simple markdown format with YAML frontmatter:
 
 ```markdown
 ---
 name: scenario_name
-title:
-  en: "English Title"
-  zh-CN: "中文标题"
-description:
-  en: "English description"
-  zh-CN: "中文描述"
+title: "Scenario Title"
+description: "When to use this scenario"
 ---
 
 ## System Prompt
 
-### English
-
-Your system prompt in English...
-
-### 中文
-
-中文系统提示...
+Your system prompt content...
 
 ## User Prompt Template
 
-### English
-
 Your user prompt template with {{context}} placeholder...
 
-### 中文
-
-中文用户提示模板...
-
 ## Guidance Bullets
-
-### English
 
 - First bullet point
 - Second bullet point
 
-### 中文
-
-- 第一个要点
-- 第二个要点
-
 ## Fallback Questions
-
-### English
 
 - First fallback question?
 - Second fallback question?
-
-### 中文
-
-- 第一个后备问题？
-- 第二个后备问题？
 ```
 
 ### Adding a New Scenario
@@ -204,7 +173,7 @@ Add to your `claude_desktop_config.json`:
 
 ### list_scenarios
 
-List available stuck-agent scenarios and supported languages.
+List available stuck-agent scenarios.
 
 **Input**: None
 
@@ -214,9 +183,8 @@ List available stuck-agent scenarios and supported languages.
   "scenarios": [
     {
       "id": "logic_is_too_complex",
-      "languages": ["en", "zh-CN"],
-      "titleByLanguage": {...},
-      "descriptionByLanguage": {...}
+      "title": "Logic is too complex / circular",
+      "description": "Use when the agent is stuck in circular reasoning..."
     }
   ]
 }
@@ -228,14 +196,12 @@ Return a static prompt template for a given scenario.
 
 **Input**:
 - `scenario` (required): One of the scenario IDs
-- `language` (optional): BCP-47 language tag, defaults to "en"
 
 **Output**:
 ```json
 {
   "template": {
     "scenario": "logic_is_too_complex",
-    "language": "en",
     "title": "Logic is too complex / circular",
     "description": "...",
     "systemPrompt": "...",
@@ -253,13 +219,11 @@ Generate clarifying questions using MCP sampling (with fallback to static questi
 - `scenario` (required): One of the scenario IDs
 - `contextSummary` (required): Summary of what the agent has been trying to do
 - `maxQuestions` (optional): Maximum questions to generate (1-10, default 3)
-- `language` (optional): BCP-47 language tag, defaults to "en"
 
 **Output**:
 ```json
 {
   "scenario": "logic_is_too_complex",
-  "language": "en",
   "questions": [
     {
       "id": "q1",

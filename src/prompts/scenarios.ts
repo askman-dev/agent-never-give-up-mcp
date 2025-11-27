@@ -11,7 +11,7 @@ import {
 	type ParsedToolDefinition,
 	getFallbackQuestionsFromDefinition,
 	parseToolMarkdown,
-	toolDefinitionToTemplates,
+	toolDefinitionToTemplate,
 } from "./loader";
 
 // Import markdown files as raw strings
@@ -21,11 +21,6 @@ import bugFixFailedMd from "../../prompts/bug_fix_always_failed/tool.md";
 import analysisTooLongMd from "../../prompts/analysis_too_long/tool.md";
 import missingRequirementsMd from "../../prompts/missing_requirements/tool.md";
 import unclearAcceptanceMd from "../../prompts/unclear_acceptance_criteria/tool.md";
-
-/**
- * Supported languages for prompts.
- */
-export const SUPPORTED_LANGUAGES = ["en", "zh-CN"] as const;
 
 /**
  * Raw markdown content for each scenario.
@@ -61,15 +56,15 @@ function getParsedDefinitions(): Record<ScenarioId, ParsedToolDefinition> {
 /**
  * Get all scenario templates from markdown files.
  */
-function buildScenarioTemplates(): Record<ScenarioId, PromptTemplate[]> {
-	const templates: Record<ScenarioId, PromptTemplate[]> = {} as Record<
+function buildScenarioTemplates(): Record<ScenarioId, PromptTemplate> {
+	const templates: Record<ScenarioId, PromptTemplate> = {} as Record<
 		ScenarioId,
-		PromptTemplate[]
+		PromptTemplate
 	>;
 	const definitions = getParsedDefinitions();
 
 	for (const [scenarioId, def] of Object.entries(definitions)) {
-		templates[scenarioId as ScenarioId] = toolDefinitionToTemplates(def);
+		templates[scenarioId as ScenarioId] = toolDefinitionToTemplate(def);
 	}
 
 	return templates;
@@ -79,7 +74,7 @@ function buildScenarioTemplates(): Record<ScenarioId, PromptTemplate[]> {
  * Static scenario templates for each scenario ID.
  * Loaded from markdown files in prompts/{tool_name}/tool.md
  */
-export const SCENARIO_TEMPLATES: Record<ScenarioId, PromptTemplate[]> =
+export const SCENARIO_TEMPLATES: Record<ScenarioId, PromptTemplate> =
 	buildScenarioTemplates();
 
 /**
@@ -90,40 +85,10 @@ export function getAllScenarioIds(): ScenarioId[] {
 }
 
 /**
- * Get templates for a specific scenario.
+ * Get template for a specific scenario.
  */
-export function getTemplatesForScenario(
-	scenarioId: ScenarioId,
-): PromptTemplate[] {
-	return SCENARIO_TEMPLATES[scenarioId] || [];
-}
-
-/**
- * Get a template for a specific scenario and language, with fallback to English.
- */
-export function getTemplate(
-	scenarioId: ScenarioId,
-	language: string,
-): PromptTemplate | null {
-	const templates = getTemplatesForScenario(scenarioId);
-	if (templates.length === 0) {
-		return null;
-	}
-
-	// Try to find exact language match
-	const exactMatch = templates.find((t) => t.language === language);
-	if (exactMatch) {
-		return exactMatch;
-	}
-
-	// Fallback to English
-	const englishFallback = templates.find((t) => t.language === "en");
-	if (englishFallback) {
-		return englishFallback;
-	}
-
-	// Return first available
-	return templates[0];
+export function getTemplate(scenarioId: ScenarioId): PromptTemplate | null {
+	return SCENARIO_TEMPLATES[scenarioId] || null;
 }
 
 /**
@@ -131,12 +96,11 @@ export function getTemplate(
  */
 export function getFallbackQuestions(
 	scenarioId: ScenarioId,
-	language: string,
 ): ClarifyingQuestion[] {
 	const definitions = getParsedDefinitions();
 	const def = definitions[scenarioId];
 	if (!def) {
 		return [];
 	}
-	return getFallbackQuestionsFromDefinition(def, language);
+	return getFallbackQuestionsFromDefinition(def);
 }

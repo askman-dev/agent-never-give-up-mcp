@@ -15,7 +15,6 @@ export type ScenarioId =
  */
 export interface PromptTemplate {
 	scenario: ScenarioId;
-	language: string; // e.g. "en", "zh-CN"
 	title: string; // short human-readable name
 	description: string; // when to use this prompt
 	systemPrompt: string; // recommended system-level guidance
@@ -51,7 +50,6 @@ export interface ClarifyingQuestion {
  */
 export interface ClarifyingQuestionsResult {
 	scenario: ScenarioId;
-	language: string;
 	questions: ClarifyingQuestion[];
 	rawSamplingResponse?: string; // original text from sampling result for debugging (optional)
 }
@@ -62,9 +60,8 @@ export interface ClarifyingQuestionsResult {
 export interface ListScenariosResult {
 	scenarios: {
 		id: ScenarioId;
-		languages: string[];
-		titleByLanguage: Record<string, string>;
-		descriptionByLanguage: Record<string, string>;
+		title: string;
+		description: string;
 	}[];
 }
 

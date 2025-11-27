@@ -153,23 +153,19 @@ export function parseToolMarkdown(content: string): ParsedToolDefinition {
 }
 
 /**
- * Convert parsed tool definition to PromptTemplate array.
+ * Convert parsed tool definition to PromptTemplate.
  */
-export function toolDefinitionToTemplates(
+export function toolDefinitionToTemplate(
 	def: ParsedToolDefinition,
-): PromptTemplate[] {
-	// Now we only have English, so return a single template
-	return [
-		{
-			scenario: def.name as ScenarioId,
-			language: "en",
-			title: def.title || def.name,
-			description: def.description || "",
-			systemPrompt: def.systemPrompt || "",
-			userPromptTemplate: def.userPromptTemplate,
-			guidanceBullets: def.guidanceBullets,
-		},
-	];
+): PromptTemplate {
+	return {
+		scenario: def.name as ScenarioId,
+		title: def.title || def.name,
+		description: def.description || "",
+		systemPrompt: def.systemPrompt || "",
+		userPromptTemplate: def.userPromptTemplate,
+		guidanceBullets: def.guidanceBullets,
+	};
 }
 
 /**
@@ -177,7 +173,6 @@ export function toolDefinitionToTemplates(
  */
 export function getFallbackQuestionsFromDefinition(
 	def: ParsedToolDefinition,
-	_language: string,
 ): ClarifyingQuestion[] {
 	const questions = def.fallbackQuestions || [];
 	return questions.map((text, idx) => ({
