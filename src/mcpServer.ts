@@ -200,7 +200,7 @@ async function handleScenarioRequest(
 }> {
 	// Handle static mode (default)
 	if (mode === "static") {
-		// Return LLM completion array style: [{role: 'user', content: <prompt string>}]
+		// Return messages array format: [{role: 'user', content: <prompt string>}]
 		const result: StaticToolResult = [
 			{
 				role: "user",
