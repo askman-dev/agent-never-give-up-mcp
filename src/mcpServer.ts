@@ -45,6 +45,11 @@ interface ServerWithSampling {
 }
 
 /**
+ * Maximum length of context summary to show in fallback question preview.
+ */
+const CONTEXT_PREVIEW_LENGTH = 100;
+
+/**
  * Agent Never Give Up MCP - A remote MCP server that provides
  * predefined and sampling-based "auto-prompts" for stuck agents.
  */
@@ -304,7 +309,7 @@ function generateFallbackQuestions(
 			// Add context reference to make questions more specific
 			markdownQuestions[0] = {
 				...firstQuestion,
-				text: `Given the context: "${contextSummary.slice(0, 100)}..." ${firstQuestion.text}`,
+				text: `Given the context: "${contextSummary.slice(0, CONTEXT_PREVIEW_LENGTH)}..." ${firstQuestion.text}`,
 			};
 		}
 		return markdownQuestions;

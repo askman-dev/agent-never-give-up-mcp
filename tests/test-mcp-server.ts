@@ -153,6 +153,7 @@ async function testListMcpTools(): Promise<void> {
 	console.log(`   Found tools: ${foundTools}/${expectedTools.length}`);
 
 	// Require at least 4 tools to be found (allowing some flexibility in AI response)
+	// With 6 total tools (1 helper + 5 scenarios), this is ~67% threshold
 	const minRequiredTools = 4;
 	if (foundTools >= minRequiredTools) {
 		console.log(
