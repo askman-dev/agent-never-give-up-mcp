@@ -30,12 +30,23 @@ function validateOrigin(request: Request, env: Env): Response | null {
 		.map((o) => o.trim().toLowerCase())
 		.filter((o) => o.length > 0);
 
+	// If no valid origins after parsing, treat as permissive mode
+	if (allowedOrigins.length === 0) {
+		return null;
+	}
+
 	// Check if the origin is in the allowed list (case-insensitive)
 	if (!allowedOrigins.includes(origin.toLowerCase())) {
-		return new Response("Forbidden: Origin not allowed", {
-			status: 403,
-			headers: { "content-type": "text/plain" },
-		});
+		return new Response(
+			JSON.stringify({
+				jsonrpc: "2.0",
+				error: { code: -32600, message: "Forbidden: Origin not allowed" },
+			}),
+			{
+				status: 403,
+				headers: { "content-type": "application/json" },
+			},
+		);
 	}
 
 	return null;
@@ -53,7 +64,7 @@ export default {
 				return originError;
 			}
 
-			return AgentNeverGiveUpMCP.serveSSE("/mcp").fetch(request, env, ctx);
+			return AgentNeverGiveUpMCP.serve("/mcp").fetch(request, env, ctx);
 		}
 
 		// Health check endpoint

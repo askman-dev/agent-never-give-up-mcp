@@ -160,10 +160,14 @@ The `ALLOWED_ORIGINS` environment variable controls which origins are permitted 
 - Requests without an `Origin` header (e.g., from non-browser tools like CLI clients) are always allowed
 
 **Example:**
-```bash
-# In wrangler.toml or wrangler.jsonc
-[vars]
-ALLOWED_ORIGINS = "https://example.com,https://app.example.com"
+```jsonc
+// In wrangler.jsonc
+{
+  // ... other config
+  "vars": {
+    "ALLOWED_ORIGINS": "https://example.com,https://app.example.com"
+  }
+}
 ```
 
 **Behavior:**
