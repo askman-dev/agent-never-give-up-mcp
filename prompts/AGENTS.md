@@ -16,7 +16,7 @@ These are *general thinking methods*, not domain-specific APIs. They are designe
 
 A good prompt teaches the agent **how to think**, not just **what to do**.
 
-> `"如何思考" 比 固定的单一待办清单 更重要。`
+> "如何思考" 比 固定的单一待办清单 更重要。
 > (How to think is more important than a fixed single to-do list.)
 
 ### Prefer stable thinking patterns
