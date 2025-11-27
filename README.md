@@ -19,7 +19,7 @@ The server does not detect these situations itself – the host/agent decides wh
 
 ## Features
 
-- **Remote MCP server over SSE** at `/sse` endpoint
+- **Remote MCP server** using Streamable HTTP at `/mcp` endpoint
 - **Three core tools**:
   - `list_scenarios` – discover available scenarios
   - `get_static_prompt` – get static prompt templates
@@ -51,7 +51,7 @@ npm run format
 npm run lint:fix
 ```
 
-The server will be available at `http://localhost:8787/sse`.
+The server will be available at `http://localhost:8787/mcp`.
 
 ## Contributing Prompts
 
@@ -146,7 +146,32 @@ npm run deploy
 ```
 
 After deployment, your MCP endpoint will be:
-`https://agent-never-give-up-mcp.<account>.workers.dev/sse`
+`https://agent-never-give-up-mcp.<account>.workers.dev/mcp`
+
+## Environment Variables
+
+The server supports the following environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ALLOWED_ORIGINS` | Comma-separated list of allowed origins for CORS/Origin validation. If not set or empty, all origins are allowed. | (empty - all origins allowed) |
+
+### Example Configuration
+
+In your `wrangler.jsonc` or environment settings:
+
+```jsonc
+{
+  "vars": {
+    "ALLOWED_ORIGINS": "https://example.com,https://app.example.com"
+  }
+}
+```
+
+When `ALLOWED_ORIGINS` is configured:
+- Requests with an `Origin` header not in the allowed list will receive a `403 Forbidden` response
+- Requests without an `Origin` header (e.g., server-to-server requests) are allowed
+- If the variable is empty or not set, all origins are allowed
 
 ## Client Configuration
 
@@ -161,7 +186,7 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "mcp-remote",
-        "https://agent-never-give-up-mcp.<account>.workers.dev/sse"
+        "https://agent-never-give-up-mcp.<account>.workers.dev/mcp"
       ]
     }
   }
@@ -170,9 +195,8 @@ Add to your `claude_desktop_config.json`:
 
 ## API Endpoints
 
-- `GET /sse` – MCP over Server-Sent Events
-- `POST /sse/message` – MCP message handler
-- `GET /mcp` – Alternative MCP endpoint
+- `GET /mcp` – MCP over Streamable HTTP (SSE stream)
+- `POST /mcp/message` – MCP message handler
 - `GET /health` – Health check
 
 ## Tools
