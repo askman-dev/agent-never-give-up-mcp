@@ -62,15 +62,17 @@ async function testListMcpTools(): Promise<void> {
 	}
 
 	console.log("");
-	console.log(`📊 Test Summary:`);
+	console.log("📊 Test Summary:");
 	console.log(`   Found tools: ${foundTools}/${expectedTools.length}`);
 
-	if (foundTools >= 3) {
-		console.log("✅ TEST PASSED: At least 3 tools were found in the output");
+	if (foundTools >= expectedTools.length) {
+		console.log(
+			`✅ TEST PASSED: At least ${expectedTools.length} tools were found in the output`,
+		);
 		process.exit(0);
 	} else {
 		console.log(
-			`❌ TEST FAILED: Expected at least 3 tools, found ${foundTools}`,
+			`❌ TEST FAILED: Expected at least ${expectedTools.length} tools, found ${foundTools}`,
 		);
 		console.log(`   Missing tools: ${missingTools.join(", ")}`);
 		process.exit(1);

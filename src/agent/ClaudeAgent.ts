@@ -96,7 +96,8 @@ export class ClaudeAgent {
 					// Explicitly pass environment variables to SDK
 					env: {
 						...process.env,
-						ANTHROPIC_API_KEY: "", // Fixed to empty string
+						// Explicitly set empty to prevent SDK from using it (we use ANTHROPIC_AUTH_TOKEN instead)
+						ANTHROPIC_API_KEY: "",
 						ANTHROPIC_AUTH_TOKEN: authToken,
 						...(baseUrl && { ANTHROPIC_BASE_URL: baseUrl }),
 					},

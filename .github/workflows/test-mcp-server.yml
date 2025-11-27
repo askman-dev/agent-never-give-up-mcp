@@ -12,6 +12,8 @@ jobs:
   test-mcp-server:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
     env:
       ANTHROPIC_API_KEY: ""
       ANTHROPIC_AUTH_TOKEN: ${{ secrets.ANTHROPIC_AUTH_TOKEN }}
