@@ -120,18 +120,6 @@ To contribute to this project or run a local instance:
 ```bash
 # Install dependencies
 npm install
-
-# Start the development server
-npm run dev
-
-# Type check
-npm run type-check
-
-# Format code
-npm run format
-
-# Lint and fix
-npm run lint:fix
 ```
 
 The local server will be available at `http://localhost:8787/mcp`.
@@ -210,7 +198,7 @@ See `prompts/AGENTS.md` for detailed guidance on writing effective prompts.
 3. Add the scenario ID to `src/types/scenarios.ts`
 4. Import the markdown file in `src/prompts/scenarios.ts`
 
-## Deployment
+## Deploy
 
 ```bash
 # Deploy to Cloudflare Workers
@@ -219,129 +207,6 @@ npm run deploy
 
 After deployment, your MCP endpoint will be:
 `https://agent-never-give-up-mcp.<account>.workers.dev/mcp`
-
-## Environment Variables
-
-### ALLOWED_ORIGINS
-
-The `ALLOWED_ORIGINS` environment variable controls which origins are permitted to access the MCP server. This provides security for browser-based clients.
-
-**Configuration:**
-- Set as a comma-separated list of allowed origins
-- If not set, the server operates in permissive mode (allows all origins)
-- Requests without an `Origin` header (e.g., from non-browser tools like CLI clients) are always allowed
-
-**Example:**
-```jsonc
-// In wrangler.jsonc
-{
-  // ... other config
-  "vars": {
-    "ALLOWED_ORIGINS": "https://example.com,https://app.example.com"
-  }
-}
-```
-
-**Behavior:**
-- If `Origin` header is present and origin is in the allowed list: Request proceeds
-- If `Origin` header is present and origin is NOT in the allowed list: Returns `403 Forbidden`
-- If `Origin` header is missing: Request proceeds (allows non-browser tools)
-
-## API Endpoints
-
-- `GET/POST /mcp` – MCP Streamable HTTP endpoint (handles all MCP traffic)
-- `GET /health` – Health check
-
-## Tools
-
-The server exposes tools in two tiers:
-
-### Core Scenario Tools (Auto-registered)
-
-These scenarios are directly available as MCP tools:
-
-#### logic_is_too_complex
-
-Handle situations when the agent is stuck in circular reasoning or over-complicating logic.
-
-#### bug_fix_always_failed
-
-Handle situations when repeated attempts to fix a bug have failed.
-
-#### missing_requirements
-
-Handle situations when requirements are unclear or missing.
-
-**Parameters** (same for all core scenario tools):
-- `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
-- `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)
-
-**Output (static mode)**:
-```json
-{
-  "mode": "static",
-  "template": {
-    "scenario": "logic_is_too_complex",
-    "title": "Logic is too complex / circular",
-    "description": "Use this when your reasoning is getting long, tangled, or circular..."
-  }
-}
-```
-
-**Output (sampling mode)**:
-```json
-{
-  "mode": "sampling",
-  "scenario": "logic_is_too_complex",
-  "questions": [
-    {
-      "id": "q1",
-      "text": "Can you describe your main goal in one sentence?",
-      "type": "free-text"
-    }
-  ],
-  "rawSamplingResponse": "..."
-}
-```
-
-### Discovery and Access Tools
-
-#### list_scenarios
-
-List all available scenarios (core + extended) with their tier.
-
-**Input**: None
-
-**Output**:
-```json
-{
-  "scenarios": [
-    {
-      "id": "logic_is_too_complex",
-      "title": "Logic is too complex / circular",
-      "description": "Use when the agent is stuck in circular reasoning...",
-      "tier": "core"
-    },
-    {
-      "id": "analysis_too_long",
-      "title": "Analysis taking too long",
-      "description": "Use when the agent is spending too much time analyzing...",
-      "tier": "extended"
-    }
-  ]
-}
-```
-
-#### get_prompt
-
-Get prompt template for any scenario (core or extended). Use `list_scenarios` to discover available scenario IDs.
-
-**Input**:
-- `scenario` (required): Scenario ID from `list_scenarios`
-- `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
-- `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck
-
-**Output**: Same format as core scenario tools
 
 ## License
 
