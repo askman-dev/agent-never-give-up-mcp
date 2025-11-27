@@ -36,15 +36,91 @@ The server does not detect these situations itself – the host/agent decides wh
 - **Public and auth-less** (v0)
 - **Cloudflare Workers deployment**
 
-## Installation
+## Configuration
 
-```bash
-npm install
+Since `agent-never-give-up` is a cloud-hosted MCP server, no local installation is required. Simply add the server configuration to your preferred AI tool.
+
+### Install in Cursor
+
+1. Open **Cursor Settings** > **MCP**.
+2. Click **+ Add new global MCP server**.
+3. Use the following configuration (or edit your `~/.cursor/mcp.json` file directly):
+
+```json
+{
+  "mcpServers": {
+    "agent-never-give-up": {
+      "type": "http",
+      "url": "https://agent-never-give-up-mcp.askman.dev/mcp",
+      "note": "A 'Swiss Army knife' toolset to help agents recover from getting stuck"
+    }
+  }
+}
+```
+
+### Install in Claude Desktop
+
+To configure the server for Claude Desktop, edit the configuration file located at:
+
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+Add the following entry to the `mcpServers` object:
+
+```json
+{
+  "mcpServers": {
+    "agent-never-give-up": {
+      "type": "http",
+      "url": "https://agent-never-give-up-mcp.askman.dev/mcp"
+    }
+  }
+}
+```
+
+### Install in Cline
+
+1. Open **Cline** and click the **MCP Servers** icon (☰).
+2. Select the **Remote Servers** tab (if available) or click **Configure MCP Servers**.
+3. Edit the `cline_mcp_settings.json` file to include:
+
+```json
+{
+  "mcpServers": {
+    "agent-never-give-up": {
+      "type": "http",
+      "url": "https://agent-never-give-up-mcp.askman.dev/mcp",
+      "note": "A comprehensive suite of tools designed to keep agents persistent and unstuck"
+    }
+  }
+}
+```
+
+### Install in Windsurf
+
+1. Open **Windsurf**.
+2. Go to **File** > **Settings** > **Configure MCP Servers** (or edit `~/.codeium/windsurf/mcp_config.json`).
+3. Add the server configuration:
+
+```json
+{
+  "mcpServers": {
+    "agent-never-give-up": {
+      "type": "http",
+      "url": "https://agent-never-give-up-mcp.askman.dev/mcp"
+    }
+  }
+}
 ```
 
 ## Development
 
+To contribute to this project or run a local instance:
+
 ```bash
+# Install dependencies
+npm install
+
 # Start the development server
 npm run dev
 
@@ -58,7 +134,7 @@ npm run format
 npm run lint:fix
 ```
 
-The server will be available at `http://localhost:8787/mcp`.
+The local server will be available at `http://localhost:8787/mcp`.
 
 ## Contributing Prompts
 
@@ -170,26 +246,6 @@ The `ALLOWED_ORIGINS` environment variable controls which origins are permitted 
 - If `Origin` header is present and origin is in the allowed list: Request proceeds
 - If `Origin` header is present and origin is NOT in the allowed list: Returns `403 Forbidden`
 - If `Origin` header is missing: Request proceeds (allows non-browser tools)
-
-## Client Configuration
-
-### Claude Desktop (via mcp-remote)
-
-Add to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "agent-never-give-up": {
-      "command": "npx",
-      "args": [
-        "mcp-remote",
-        "https://agent-never-give-up-mcp.<account>.workers.dev/mcp"
-      ]
-    }
-  }
-}
-```
 
 ## API Endpoints
 
