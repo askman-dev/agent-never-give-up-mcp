@@ -6,7 +6,7 @@ This document explains how to think about using this tool ecosystem and how to w
 
 The tools in this repository help agents recover when they get stuck.
 
-- **Escape being stuck.** Tools like `logic_is_too_complex` give agents a structured way to reset and move forward when reasoning becomes circular or tangled.
+- **Escape being stuck.** Tools like `logic-is-too-complex` give agents a structured way to reset and move forward when reasoning becomes circular or tangled.
 - **Simplify thinking.** Instead of adding more steps, these tools help agents step back, clarify goals, and try a different approach.
 - **Recover gracefully.** When something goes wrong—missing information, failed attempts, unclear goals—agents can use these tools to diagnose the problem and continue.
 
@@ -43,7 +43,7 @@ A prompt that says "first, make sure you understand the goal; then, identify wha
 | "Step 1: Read file X. Step 2: Change line 42. Step 3: Save." | "First, re-read the user's request. Summarize the main goal. Identify what's blocking you. Propose a simple next step." |
 | A long checklist of specific actions | A short protocol for reasoning through any problem |
 
-The `logic_is_too_complex` tool is an example of a "how to think" prompt. It doesn't tell the agent what domain-specific action to take. Instead, it guides the agent to:
+The `logic-is-too-complex` tool is an example of a "how to think" prompt. It doesn't tell the agent what domain-specific action to take. Instead, it guides the agent to:
 
 1. Re-anchor on the original goal.
 2. Summarize what was already tried.

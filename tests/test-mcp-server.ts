@@ -126,13 +126,13 @@ async function testListMcpTools(): Promise<void> {
 
 	// Verify that tools are mentioned in the output
 	// Expected tools: 3 core scenario tools + list_scenarios + get_prompt = 5 tools
-	const expectedTools = [
-		"list_scenarios",
-		"get_prompt",
-		"logic_is_too_complex",
-		"bug_fix_always_failed",
-		"missing_requirements",
-	];
+        const expectedTools = [
+                "list_scenarios",
+                "get_prompt",
+                "logic-is-too-complex",
+                "bug-fix-always-failed",
+                "missing-requirements",
+        ];
 
 	let foundTools = 0;
 	const missingTools: string[] = [];
