@@ -19,7 +19,7 @@ The server does not detect these situations itself – the host/agent decides wh
 
 ## Features
 
-- **Remote MCP server over SSE** at `/sse` endpoint
+- **Remote MCP server** at `/mcp` endpoint (Streamable HTTP specification compliant)
 - **Three core tools**:
   - `list_scenarios` – discover available scenarios
   - `get_static_prompt` – get static prompt templates
@@ -51,7 +51,7 @@ npm run format
 npm run lint:fix
 ```
 
-The server will be available at `http://localhost:8787/sse`.
+The server will be available at `http://localhost:8787/mcp`.
 
 ## Contributing Prompts
 
@@ -146,7 +146,30 @@ npm run deploy
 ```
 
 After deployment, your MCP endpoint will be:
-`https://agent-never-give-up-mcp.<account>.workers.dev/sse`
+`https://agent-never-give-up-mcp.<account>.workers.dev/mcp`
+
+## Environment Variables
+
+### ALLOWED_ORIGINS
+
+The `ALLOWED_ORIGINS` environment variable controls which origins are permitted to access the MCP server. This provides security for browser-based clients.
+
+**Configuration:**
+- Set as a comma-separated list of allowed origins
+- If not set, the server operates in permissive mode (allows all origins)
+- Requests without an `Origin` header (e.g., from non-browser tools like CLI clients) are always allowed
+
+**Example:**
+```bash
+# In wrangler.toml or wrangler.jsonc
+[vars]
+ALLOWED_ORIGINS = "https://example.com,https://app.example.com"
+```
+
+**Behavior:**
+- If `Origin` header is present and origin is in the allowed list: Request proceeds
+- If `Origin` header is present and origin is NOT in the allowed list: Returns `403 Forbidden`
+- If `Origin` header is missing: Request proceeds (allows non-browser tools)
 
 ## Client Configuration
 
@@ -161,7 +184,7 @@ Add to your `claude_desktop_config.json`:
       "command": "npx",
       "args": [
         "mcp-remote",
-        "https://agent-never-give-up-mcp.<account>.workers.dev/sse"
+        "https://agent-never-give-up-mcp.<account>.workers.dev/mcp"
       ]
     }
   }
@@ -170,9 +193,7 @@ Add to your `claude_desktop_config.json`:
 
 ## API Endpoints
 
-- `GET /sse` – MCP over Server-Sent Events
-- `POST /sse/message` – MCP message handler
-- `GET /mcp` – Alternative MCP endpoint
+- `GET/POST /mcp` – MCP Streamable HTTP endpoint (handles all MCP traffic)
 - `GET /health` – Health check
 
 ## Tools

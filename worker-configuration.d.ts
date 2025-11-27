@@ -10,6 +10,11 @@ declare namespace Cloudflare {
 		MCP_OBJECT: DurableObjectNamespace<
 			import("./src/index").AgentNeverGiveUpMCP
 		>;
+		/**
+		 * Comma-separated list of allowed origins for CORS/Origin validation.
+		 * If not set, origin validation is skipped (permissive mode for non-browser tools).
+		 */
+		ALLOWED_ORIGINS?: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
