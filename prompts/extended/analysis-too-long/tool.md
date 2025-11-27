@@ -1,5 +1,5 @@
 ---
-name: analysis_too_long
+name: analysis-too-long
 title: "Analysis taking too long"
 description: "Use this when you are spending too much time analyzing without making progress, and you need to move forward with a decision."
 ---

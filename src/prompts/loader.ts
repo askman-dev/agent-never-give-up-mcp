@@ -158,13 +158,14 @@ export function parseToolMarkdown(content: string): ParsedToolDefinition {
  * Convert parsed tool definition to PromptTemplate.
  */
 export function toolDefinitionToTemplate(
-	def: ParsedToolDefinition,
+        def: ParsedToolDefinition,
+        scenarioId?: ScenarioId,
 ): PromptTemplate {
-	return {
-		scenario: def.name as ScenarioId,
-		title: def.title || def.name,
-		description: def.description || "",
-		promptBody: def.promptBody || "",
+        return {
+                scenario: (scenarioId ?? def.name) as ScenarioId,
+                title: def.title || def.name,
+                description: def.description || "",
+                promptBody: def.promptBody || "",
 		systemPrompt: def.systemPrompt || "",
 		userPromptTemplate: def.userPromptTemplate,
 		guidanceBullets: def.guidanceBullets,

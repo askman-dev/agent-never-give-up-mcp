@@ -1,5 +1,5 @@
 ---
-name: unclear_acceptance_criteria
+name: unclear-acceptance-criteria
 title: "Unclear acceptance criteria"
 description: "Use this when you don't know what 'done' looks like for the task, and you need to define clear success criteria."
 ---

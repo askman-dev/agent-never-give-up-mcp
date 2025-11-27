@@ -27,11 +27,11 @@ graph TD
     %% 3. The Solution (MCP Call)
     subgraph MCP ["Agent Never Give Up MCP"]
         direction TB
-        T1(logic_is_too_complex)
-        T2(bug_fix_always_failed)
-        T3(missing_requirements)
-        T4(analysis_too_long)
-        T5(unclear_acceptance_criteria)
+        T1(logic-is-too-complex)
+        T2(bug-fix-always-failed)
+        T3(missing-requirements)
+        T4(analysis-too-long)
+        T5(unclear-acceptance-criteria)
     end
 
     %% Mapping Triggers to Tools
@@ -67,12 +67,12 @@ graph TD
 - **Remote MCP server** at `/mcp` endpoint (Streamable HTTP specification compliant)
 - **Two-tier scenario organization**:
   - **Core scenarios** (auto-registered as direct MCP tools):
-    - `logic_is_too_complex` – for circular reasoning or over-complicated logic
-    - `bug_fix_always_failed` – for repeated failed bug fix attempts
-    - `missing_requirements` – for unclear or missing requirements
+    - `logic-is-too-complex` – for circular reasoning or over-complicated logic
+    - `bug-fix-always-failed` – for repeated failed bug fix attempts
+    - `missing-requirements` – for unclear or missing requirements
   - **Extended scenarios** (discovered via `list_scenarios`, accessed via `get_prompt`):
-    - `analysis_too_long` – for excessive analysis time
-    - `unclear_acceptance_criteria` – for undefined acceptance criteria
+    - `analysis-too-long` – for excessive analysis time
+    - `unclear-acceptance-criteria` – for undefined acceptance criteria
 - **Discovery tools**:
   - `list_scenarios` – list all scenarios with their tier (core/extended)
   - `get_prompt` – access any scenario (core or extended)
@@ -176,16 +176,16 @@ Prompts are organized in two tiers within the `prompts/` directory:
 ```
 prompts/
 ├── core/                           # Core scenarios (auto-registered as tools)
-│   ├── logic_is_too_complex/
+│   ├── logic-is-too-complex/
 │   │   └── tool.md
-│   ├── bug_fix_always_failed/
+│   ├── bug-fix-always-failed/
 │   │   └── tool.md
-│   └── missing_requirements/
+│   └── missing-requirements/
 │       └── tool.md
 └── extended/                       # Extended scenarios (via list_scenarios + get_prompt)
-    ├── analysis_too_long/
+    ├── analysis-too-long/
     │   └── tool.md
-    └── unclear_acceptance_criteria/
+    └── unclear-acceptance-criteria/
         └── tool.md
 ```
 
