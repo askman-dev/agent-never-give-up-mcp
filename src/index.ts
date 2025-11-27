@@ -40,7 +40,7 @@ function validateOrigin(request: Request, env: Env): Response | null {
 		return new Response(
 			JSON.stringify({
 				jsonrpc: "2.0",
-				error: { code: -32600, message: "Forbidden: Origin not allowed" },
+				error: { code: -32001, message: "Forbidden: Origin not allowed" },
 			}),
 			{
 				status: 403,
