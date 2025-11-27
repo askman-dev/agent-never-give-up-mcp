@@ -13,6 +13,7 @@ export interface ParsedToolDefinition {
 	name: string;
 	title: string;
 	description: string;
+	promptBody: string; // Full markdown body (after frontmatter removal)
 	systemPrompt: string;
 	userPromptTemplate: string;
 	guidanceBullets: string[];
@@ -122,6 +123,7 @@ export function parseToolMarkdown(content: string): ParsedToolDefinition {
 		name: String(frontmatter.name || ""),
 		title: String(frontmatter.title || ""),
 		description: String(frontmatter.description || ""),
+		promptBody: body.trim(), // Store the full markdown body
 		systemPrompt: "",
 		userPromptTemplate: "",
 		guidanceBullets: [],
@@ -162,6 +164,7 @@ export function toolDefinitionToTemplate(
 		scenario: def.name as ScenarioId,
 		title: def.title || def.name,
 		description: def.description || "",
+		promptBody: def.promptBody || "",
 		systemPrompt: def.systemPrompt || "",
 		userPromptTemplate: def.userPromptTemplate,
 		guidanceBullets: def.guidanceBullets,

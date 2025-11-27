@@ -24,6 +24,7 @@ export interface PromptTemplate {
 	scenario: ScenarioId;
 	title: string; // short human-readable name
 	description: string; // when to use this prompt
+	promptBody: string; // full prompt content (markdown body)
 	systemPrompt: string; // recommended system-level guidance
 	userPromptTemplate?: string; // optional user message template with placeholders
 	guidanceBullets?: string[]; // bullet points shown to user/agent
@@ -86,8 +87,33 @@ export interface GetStaticPromptResult {
 }
 
 /**
+ * A message in the LLM completion array format.
+ */
+export interface PromptMessage {
+	role: "user";
+	content: string;
+}
+
+/**
+ * Result of a scenario-specific tool for static mode.
+ * Returns LLM completion array style: [{role: 'user', content: <prompt string>}]
+ */
+export type StaticToolResult = PromptMessage[];
+
+/**
+ * Result of a scenario-specific tool for sampling mode.
+ * Returns sampling-based questions.
+ */
+export interface SamplingToolResult {
+	scenario: ScenarioId;
+	questions: ClarifyingQuestion[];
+	rawSamplingResponse?: string;
+}
+
+/**
  * Result of a scenario-specific tool.
- * Returns either static template or sampling-based questions based on the mode.
+ * Returns either static prompt array or sampling-based questions based on the mode.
+ * @deprecated Use StaticToolResult or SamplingToolResult instead
  */
 export interface ScenarioToolResult {
 	mode: "static" | "sampling";
