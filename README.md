@@ -219,7 +219,6 @@ Handle situations when requirements are unclear or missing.
 **Parameters** (same for all core scenario tools):
 - `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
 - `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)
-- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate (1-10)
 
 **Output (static mode)**:
 ```json
@@ -285,7 +284,6 @@ Get prompt template for any scenario (core or extended). Use `list_scenarios` to
 - `scenario` (required): Scenario ID from `list_scenarios`
 - `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
 - `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck
-- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate
 
 **Output**: Same format as core scenario tools
 
