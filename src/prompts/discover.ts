@@ -11,21 +11,20 @@ export interface DiscoveredScenario {
         markdown: string;
 }
 
+export const SCENARIO_ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
 const PROMPTS_ROOT = path.resolve(__dirname, "../../prompts");
 
-function normalizeScenarioId(folderName: string): string {
-        const slug = folderName
-                .trim()
-                .toLowerCase()
-                .replace(/[^a-z0-9]+/g, "-")
-                .replace(/-+/g, "-")
-                .replace(/^-|-$/g, "");
-
-        if (!slug) {
-                throw new Error(`Invalid scenario folder name: "${folderName}"`);
+export function assertValidScenarioFolderName(folderName: string): string {
+        if (!SCENARIO_ID_PATTERN.test(folderName)) {
+                const message =
+                        `Invalid scenario folder name: "${folderName}". ` +
+                        "Names must match the pattern /^[a-z0-9]+(-[a-z0-9]+)*$/";
+                console.error(message);
+                throw new Error(message);
         }
 
-        return slug;
+        return folderName;
 }
 
 function loadScenarioMarkdown(tier: ScenarioTier, folderName: string): string {
@@ -35,7 +34,7 @@ function loadScenarioMarkdown(tier: ScenarioTier, folderName: string): string {
 
 export function discoverScenarios(): DiscoveredScenario[] {
         const tiers: ScenarioTier[] = ["core", "extended"];
-        const discovered: DiscoveredScenario[] = [];
+        const discovered = new Map<string, DiscoveredScenario>();
 
         for (const tier of tiers) {
                 const tierPath = path.join(PROMPTS_ROOT, tier);
@@ -44,11 +43,22 @@ export function discoverScenarios(): DiscoveredScenario[] {
                 const entries = fs.readdirSync(tierPath, { withFileTypes: true });
                 for (const entry of entries) {
                         if (!entry.isDirectory()) continue;
-                        const id = normalizeScenarioId(entry.name);
+                        const id = assertValidScenarioFolderName(entry.name);
                         const markdown = loadScenarioMarkdown(tier, entry.name);
-                        discovered.push({ id, tier, markdown });
+
+                        if (discovered.has(id)) {
+                                const existing = discovered.get(id)!;
+                                if (existing.tier === "core") {
+                                        console.warn(
+                                                `Duplicate scenario id "${id}" found in tiers "${existing.tier}" and "${tier}". Keeping core definition.`,
+                                        );
+                                        continue;
+                                }
+                        }
+
+                        discovered.set(id, { id, tier, markdown });
                 }
         }
 
-        return discovered;
+        return Array.from(discovered.values());
 }
