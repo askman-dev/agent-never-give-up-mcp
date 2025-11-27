@@ -23,7 +23,10 @@
     "type-check": "tsc --noEmit",
     "pretest:mcp": "npm run generate:scenarios",
     "test:mcp": "tsx tests/test-mcp-server.ts",
-    "generate:scenarios": "tsx scripts/generate-scenarios.ts"
+    "generate:scenarios": "tsx scripts/generate-scenarios.ts",
+    "publish:npm": "npm publish --access public",
+    "publish:mcp": "mcp-publisher login github && mcp-publisher publish",
+    "release": "npm run publish:npm && npm run publish:mcp"
   },
 	"dependencies": {
 		"@anthropic-ai/claude-agent-sdk": "^0.1.55",

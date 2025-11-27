@@ -1,28 +1,28 @@
 {
-	"$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-	"name": "io.github.askman-dev/agent-never-give-up",
-	"description": "An MCP server that acts as an escape guide for AI coding agents, providing structured thinking protocols to help agents unstuck themselves without human help.",
-	"repository": {
-		"url": "https://github.com/askman-dev/agent-never-give-up-mcp",
-		"source": "github"
-	},
-	"version": "0.1.0",
-	"packages": [
-		{
-			"registryType": "npm",
-			"identifier": "agent-never-give-up-mcp",
-			"version": "0.1.0",
-			"transport": {
-				"type": "stdio"
-			}
-		}
-	],
-	"remoteEndpoints": [
-		{
-			"url": "https://agent-never-give-up-mcp.askman.dev/mcp",
-			"transport": {
-				"type": "http"
-			}
-		}
-	]
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.askman-dev/agent-never-give-up",
+  "description": "An escape guide for coding agents, providing structured thinking tools to help agents unstick.",
+  "repository": {
+    "url": "https://github.com/askman-dev/agent-never-give-up-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "agent-never-give-up-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ],
+  "remoteEndpoints": [
+    {
+      "url": "https://agent-never-give-up-mcp.askman.dev/mcp",
+      "transport": {
+        "type": "http"
+      }
+    }
+  ]
 }
