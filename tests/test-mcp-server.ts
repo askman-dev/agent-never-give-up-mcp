@@ -3,12 +3,13 @@
  * This test verifies that the MCP server properly exposes its tools
  *
  * Tests the LOCAL development server (starts wrangler dev automatically)
+ * Uses HTTP protocol (MCP official recommendation) instead of SSE
  */
 
 import { spawn, type ChildProcess } from "node:child_process";
 import { ClaudeAgent } from "../src/agent/ClaudeAgent";
 
-const LOCAL_MCP_SERVER_URL = "http://localhost:8787/sse";
+const LOCAL_MCP_SERVER_URL = "http://localhost:8787/mcp";
 const SERVER_STARTUP_TIMEOUT = 30000; // 30 seconds to wait for server to start
 
 let serverProcess: ChildProcess | null = null;
@@ -97,11 +98,12 @@ async function testListMcpTools(): Promise<void> {
 	await startLocalServer();
 
 	// Create agent with MCP server configuration pointing to local server
+	// Using HTTP protocol as recommended by MCP official documentation
 	const agent = new ClaudeAgent({
 		maxTurns: 5, // Limit turns for this simple test
 		mcpServers: {
 			"agent-never-give-up": {
-				type: "sse",
+				type: "http",
 				url: LOCAL_MCP_SERVER_URL,
 			},
 		},
