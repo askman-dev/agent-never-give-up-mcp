@@ -48,8 +48,8 @@ function parseFrontmatter(content: string): {
 		// Skip empty lines
 		if (!trimmedLine) continue;
 
-		// Check for top-level key
-		const topLevelMatch = line.match(/^([a-z_]+):\s*(.*)$/);
+		// Check for top-level key (supports letters, underscores, and hyphens)
+		const topLevelMatch = line.match(/^([a-zA-Z_-]+):\s*(.*)$/);
 		if (topLevelMatch && !line.startsWith("  ")) {
 			currentKey = topLevelMatch[1];
 			const value = topLevelMatch[2].trim();
@@ -69,7 +69,7 @@ function parseFrontmatter(content: string): {
 		}
 
 		// Check for nested key (like en: or zh-CN:)
-		const nestedMatch = line.match(/^\s+([a-zA-Z-]+):\s*(.*)$/);
+		const nestedMatch = line.match(/^\s+([a-zA-Z_-]+):\s*(.*)$/);
 		if (nestedMatch) {
 			currentSubKey = nestedMatch[1];
 			const value = nestedMatch[2].trim();
