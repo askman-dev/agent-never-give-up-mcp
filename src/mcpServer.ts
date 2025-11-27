@@ -18,9 +18,11 @@ import {
 import type {
 	ClarifyingQuestion,
 	ListScenariosResult,
+	PromptMessage,
 	PromptTemplate,
+	SamplingToolResult,
 	ScenarioId,
-	ScenarioToolResult,
+	StaticToolResult,
 } from "./types/scenarios";
 
 /**
@@ -198,10 +200,13 @@ async function handleScenarioRequest(
 }> {
 	// Handle static mode (default)
 	if (mode === "static") {
-		const result: ScenarioToolResult = {
-			mode: "static",
-			template: template,
-		};
+		// Return LLM completion array style: [{role: 'user', content: <prompt string>}]
+		const result: StaticToolResult = [
+			{
+				role: "user",
+				content: template.promptBody,
+			},
+		];
 
 		return {
 			content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
@@ -271,8 +276,7 @@ async function handleScenarioRequest(
 
 			const questions = parseQuestionsFromSamplingResponse(rawText);
 
-			const result: ScenarioToolResult = {
-				mode: "sampling",
+			const result: SamplingToolResult = {
 				scenario: scenarioId,
 				questions,
 				rawSamplingResponse: rawText,
@@ -294,8 +298,7 @@ async function handleScenarioRequest(
 		contextSummary,
 	);
 
-	const result: ScenarioToolResult = {
-		mode: "sampling",
+	const result: SamplingToolResult = {
 		scenario: scenarioId,
 		questions: fallbackQuestions,
 		rawSamplingResponse: "Sampling not available - using fallback questions",
