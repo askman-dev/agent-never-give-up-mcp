@@ -71,3 +71,15 @@ export interface ListScenariosResult {
 export interface GetStaticPromptResult {
 	template: PromptTemplate;
 }
+
+/**
+ * Result of a scenario-specific tool.
+ * Returns either static template or sampling-based questions based on the mode.
+ */
+export interface ScenarioToolResult {
+	mode: "static" | "sampling";
+	template?: PromptTemplate; // Present when mode is "static"
+	scenario?: ScenarioId; // Present when mode is "sampling"
+	questions?: ClarifyingQuestion[]; // Present when mode is "sampling"
+	rawSamplingResponse?: string; // Present when mode is "sampling"
+}

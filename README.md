@@ -20,10 +20,14 @@ The server does not detect these situations itself – the host/agent decides wh
 ## Features
 
 - **Remote MCP server** at `/mcp` endpoint (Streamable HTTP specification compliant)
-- **Three core tools**:
-  - `list_scenarios` – discover available scenarios
-  - `get_static_prompt` – get static prompt templates
-  - `generate_clarifying_questions` – generate dynamic questions using MCP sampling
+- **Dynamic scenario-specific tools**: Each scenario is exposed as its own tool
+  - `logic_is_too_complex` – for circular reasoning or over-complicated logic
+  - `bug_fix_always_failed` – for repeated failed bug fix attempts
+  - `analysis_too_long` – for excessive analysis time
+  - `missing_requirements` – for unclear or missing requirements
+  - `unclear_acceptance_criteria` – for undefined acceptance criteria
+- **Helper tool**: `list_scenarios` – programmatic discovery of all scenarios
+- **Dual mode support**: Each tool supports `static` and `sampling` modes
 - **Community-contributed prompts** via markdown files
 - **Public and auth-less** (v0)
 - **Cloudflare Workers deployment**
@@ -171,9 +175,56 @@ Add to your `claude_desktop_config.json`:
 
 ## Tools
 
+### Scenario-Specific Tools
+
+Each scenario is exposed as its own tool with the following parameters:
+
+**Parameters**:
+- `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
+- `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)
+- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate (1-10)
+
+**Available scenario tools**:
+- `logic_is_too_complex` – Use when the agent is stuck in circular reasoning or overly complex chains of thought
+- `bug_fix_always_failed` – Use when repeated attempts to fix a bug fail
+- `analysis_too_long` – Use when the agent is spending too much time analyzing
+- `missing_requirements` – Use when requirements are unclear or missing
+- `unclear_acceptance_criteria` – Use when the agent doesn't know what "done" looks like
+
+**Output (static mode)**:
+```json
+{
+  "mode": "static",
+  "template": {
+    "scenario": "logic_is_too_complex",
+    "title": "Logic is too complex / circular",
+    "description": "...",
+    "systemPrompt": "...",
+    "userPromptTemplate": "...",
+    "guidanceBullets": [...]
+  }
+}
+```
+
+**Output (sampling mode)**:
+```json
+{
+  "mode": "sampling",
+  "scenario": "logic_is_too_complex",
+  "questions": [
+    {
+      "id": "q1",
+      "text": "Can you describe your main goal in one sentence?",
+      "type": "free-text"
+    }
+  ],
+  "rawSamplingResponse": "..."
+}
+```
+
 ### list_scenarios
 
-List available stuck-agent scenarios.
+List available stuck-agent scenarios. This is a helper tool for programmatic discovery – all scenarios are also directly available as individual tools.
 
 **Input**: None
 
@@ -187,51 +238,6 @@ List available stuck-agent scenarios.
       "description": "Use when the agent is stuck in circular reasoning..."
     }
   ]
-}
-```
-
-### get_static_prompt
-
-Return a static prompt template for a given scenario.
-
-**Input**:
-- `scenario` (required): One of the scenario IDs
-
-**Output**:
-```json
-{
-  "template": {
-    "scenario": "logic_is_too_complex",
-    "title": "Logic is too complex / circular",
-    "description": "...",
-    "systemPrompt": "...",
-    "userPromptTemplate": "...",
-    "guidanceBullets": [...]
-  }
-}
-```
-
-### generate_clarifying_questions
-
-Generate clarifying questions using MCP sampling (with fallback to static questions).
-
-**Input**:
-- `scenario` (required): One of the scenario IDs
-- `contextSummary` (required): Summary of what the agent has been trying to do
-- `maxQuestions` (optional): Maximum questions to generate (1-10, default 3)
-
-**Output**:
-```json
-{
-  "scenario": "logic_is_too_complex",
-  "questions": [
-    {
-      "id": "q1",
-      "text": "Can you describe your main goal in one sentence?",
-      "type": "free-text"
-    }
-  ],
-  "rawSamplingResponse": "..."
 }
 ```
 
