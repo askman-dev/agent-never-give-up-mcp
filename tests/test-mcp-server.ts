@@ -124,15 +124,14 @@ async function testListMcpTools(): Promise<void> {
 	console.log(result);
 	console.log("=".repeat(60));
 
-	// Verify that scenario-specific tools are mentioned in the output
-	// The expected tools are: list_scenarios (helper) + 5 scenario-specific tools
+	// Verify that tools are mentioned in the output
+	// Expected tools: 3 core scenario tools + list_scenarios + get_prompt = 5 tools
 	const expectedTools = [
 		"list_scenarios",
+		"get_prompt",
 		"logic_is_too_complex",
 		"bug_fix_always_failed",
-		"analysis_too_long",
 		"missing_requirements",
-		"unclear_acceptance_criteria",
 	];
 
 	let foundTools = 0;
@@ -152,9 +151,9 @@ async function testListMcpTools(): Promise<void> {
 	console.log("📊 Test Summary:");
 	console.log(`   Found tools: ${foundTools}/${expectedTools.length}`);
 
-	// Require at least 4 tools to be found (allowing some flexibility in AI response)
-	// With 6 total tools (1 helper + 5 scenarios), this is ~67% threshold
-	const minRequiredTools = 4;
+	// Require at least 3 tools to be found (allowing some flexibility in AI response)
+	// With 5 total tools (3 core + list_scenarios + get_prompt), this is 60% threshold
+	const minRequiredTools = 3;
 	if (foundTools >= minRequiredTools) {
 		console.log(
 			`✅ TEST PASSED: At least ${minRequiredTools} tools were found in the output`,

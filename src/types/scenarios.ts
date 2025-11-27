@@ -11,6 +11,13 @@ export type ScenarioId =
 	| "unclear_acceptance_criteria";
 
 /**
+ * Scenario tier - determines how the scenario is exposed.
+ * - "core": Auto-registered as direct MCP tools
+ * - "extended": Discovered via list_scenarios, accessed via get_prompt
+ */
+export type ScenarioTier = "core" | "extended";
+
+/**
  * A static prompt template for a given scenario.
  */
 export interface PromptTemplate {
@@ -55,14 +62,20 @@ export interface ClarifyingQuestionsResult {
 }
 
 /**
+ * Scenario metadata for listing.
+ */
+export interface ScenarioMetadata {
+	id: ScenarioId;
+	title: string;
+	description: string;
+	tier: ScenarioTier;
+}
+
+/**
  * Result of listing scenarios.
  */
 export interface ListScenariosResult {
-	scenarios: {
-		id: ScenarioId;
-		title: string;
-		description: string;
-	}[];
+	scenarios: ScenarioMetadata[];
 }
 
 /**

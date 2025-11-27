@@ -20,13 +20,17 @@ The server does not detect these situations itself – the host/agent decides wh
 ## Features
 
 - **Remote MCP server** at `/mcp` endpoint (Streamable HTTP specification compliant)
-- **Dynamic scenario-specific tools**: Each scenario is exposed as its own tool
-  - `logic_is_too_complex` – for circular reasoning or over-complicated logic
-  - `bug_fix_always_failed` – for repeated failed bug fix attempts
-  - `analysis_too_long` – for excessive analysis time
-  - `missing_requirements` – for unclear or missing requirements
-  - `unclear_acceptance_criteria` – for undefined acceptance criteria
-- **Helper tool**: `list_scenarios` – programmatic discovery of all scenarios
+- **Two-tier scenario organization**:
+  - **Core scenarios** (auto-registered as direct MCP tools):
+    - `logic_is_too_complex` – for circular reasoning or over-complicated logic
+    - `bug_fix_always_failed` – for repeated failed bug fix attempts
+    - `missing_requirements` – for unclear or missing requirements
+  - **Extended scenarios** (discovered via `list_scenarios`, accessed via `get_prompt`):
+    - `analysis_too_long` – for excessive analysis time
+    - `unclear_acceptance_criteria` – for undefined acceptance criteria
+- **Discovery tools**:
+  - `list_scenarios` – list all scenarios with their tier (core/extended)
+  - `get_prompt` – access any scenario (core or extended)
 - **Dual mode support**: Each tool supports `static` and `sampling` modes
 - **Community-contributed prompts** via markdown files
 - **Public and auth-less** (v0)
@@ -58,20 +62,22 @@ The server will be available at `http://localhost:8787/mcp`.
 
 ## Contributing Prompts
 
-Prompts are stored in the `prompts/` directory with the structure:
+Prompts are organized in two tiers within the `prompts/` directory:
 
 ```
 prompts/
-├── logic_is_too_complex/
-│   └── tool.md
-├── bug_fix_always_failed/
-│   └── tool.md
-├── analysis_too_long/
-│   └── tool.md
-├── missing_requirements/
-│   └── tool.md
-└── unclear_acceptance_criteria/
-    └── tool.md
+├── core/                           # Core scenarios (auto-registered as tools)
+│   ├── logic_is_too_complex/
+│   │   └── tool.md
+│   ├── bug_fix_always_failed/
+│   │   └── tool.md
+│   └── missing_requirements/
+│       └── tool.md
+└── extended/                       # Extended scenarios (via list_scenarios + get_prompt)
+    ├── analysis_too_long/
+    │   └── tool.md
+    └── unclear_acceptance_criteria/
+        └── tool.md
 ```
 
 ### Prompt File Format
@@ -106,10 +112,18 @@ Your user prompt template with {{context}} placeholder...
 
 ### Adding a New Scenario
 
-1. Create a new directory: `prompts/{scenario_name}/`
+**Core scenarios** (auto-registered as tools):
+1. Create a new directory: `prompts/core/{scenario_name}/`
 2. Add a `tool.md` file following the format above
 3. Add the scenario ID to `src/types/scenarios.ts`
-4. Import and register the markdown file in `src/prompts/scenarios.ts`
+4. Import the markdown file in `src/prompts/scenarios.ts`
+5. Add the scenario ID to `CORE_SCENARIO_IDS` in `src/prompts/scenarios.ts`
+
+**Extended scenarios** (accessible via `get_prompt`):
+1. Create a new directory: `prompts/extended/{scenario_name}/`
+2. Add a `tool.md` file following the format above
+3. Add the scenario ID to `src/types/scenarios.ts`
+4. Import the markdown file in `src/prompts/scenarios.ts`
 
 ## Deployment
 
@@ -175,21 +189,28 @@ Add to your `claude_desktop_config.json`:
 
 ## Tools
 
-### Scenario-Specific Tools
+The server exposes tools in two tiers:
 
-Each scenario is exposed as its own tool with the following parameters:
+### Core Scenario Tools (Auto-registered)
 
-**Parameters**:
+These scenarios are directly available as MCP tools:
+
+#### logic_is_too_complex
+
+Handle situations when the agent is stuck in circular reasoning or over-complicating logic.
+
+#### bug_fix_always_failed
+
+Handle situations when repeated attempts to fix a bug have failed.
+
+#### missing_requirements
+
+Handle situations when requirements are unclear or missing.
+
+**Parameters** (same for all core scenario tools):
 - `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
 - `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)
 - `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate (1-10)
-
-**Available scenario tools**:
-- `logic_is_too_complex` – Use when the agent is stuck in circular reasoning or overly complex chains of thought
-- `bug_fix_always_failed` – Use when repeated attempts to fix a bug fail
-- `analysis_too_long` – Use when the agent is spending too much time analyzing
-- `missing_requirements` – Use when requirements are unclear or missing
-- `unclear_acceptance_criteria` – Use when the agent doesn't know what "done" looks like
 
 **Output (static mode)**:
 ```json
@@ -222,9 +243,11 @@ Each scenario is exposed as its own tool with the following parameters:
 }
 ```
 
-### list_scenarios
+### Discovery and Access Tools
 
-List available stuck-agent scenarios. This is a helper tool for programmatic discovery – all scenarios are also directly available as individual tools.
+#### list_scenarios
+
+List all available scenarios (core + extended) with their tier.
 
 **Input**: None
 
@@ -235,11 +258,30 @@ List available stuck-agent scenarios. This is a helper tool for programmatic dis
     {
       "id": "logic_is_too_complex",
       "title": "Logic is too complex / circular",
-      "description": "Use when the agent is stuck in circular reasoning..."
+      "description": "Use when the agent is stuck in circular reasoning...",
+      "tier": "core"
+    },
+    {
+      "id": "analysis_too_long",
+      "title": "Analysis taking too long",
+      "description": "Use when the agent is spending too much time analyzing...",
+      "tier": "extended"
     }
   ]
 }
 ```
+
+#### get_prompt
+
+Get prompt template for any scenario (core or extended). Use `list_scenarios` to discover available scenario IDs.
+
+**Input**:
+- `scenario` (required): Scenario ID from `list_scenarios`
+- `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
+- `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck
+- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate
+
+**Output**: Same format as core scenario tools
 
 ## License
 
