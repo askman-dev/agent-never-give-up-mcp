@@ -24,11 +24,14 @@ function validateOrigin(request: Request, env: Env): Response | null {
 		return null;
 	}
 
-	// Parse the comma-separated list of allowed origins
-	const allowedOrigins = env.ALLOWED_ORIGINS.split(",").map((o) => o.trim());
+	// Parse the comma-separated list of allowed origins, filtering empty strings
+	// and normalizing to lowercase for case-insensitive comparison
+	const allowedOrigins = env.ALLOWED_ORIGINS.split(",")
+		.map((o) => o.trim().toLowerCase())
+		.filter((o) => o.length > 0);
 
-	// Check if the origin is in the allowed list
-	if (!allowedOrigins.includes(origin)) {
+	// Check if the origin is in the allowed list (case-insensitive)
+	if (!allowedOrigins.includes(origin.toLowerCase())) {
 		return new Response("Forbidden: Origin not allowed", {
 			status: 403,
 			headers: { "content-type": "text/plain" },
