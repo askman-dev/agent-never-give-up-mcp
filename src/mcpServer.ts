@@ -5,6 +5,8 @@ import { McpAgent } from "agents/mcp";
 import { z } from "zod";
 import {
 	getAllScenarioIds,
+	getCoreScenarioIds,
+	isCoreScenario,
 	getFallbackQuestions,
 	getTemplate,
 	SCENARIO_TEMPLATES,
@@ -15,10 +17,10 @@ import {
 } from "./prompts/systemPrompts";
 import type {
 	ClarifyingQuestion,
-	ClarifyingQuestionsResult,
-	GetStaticPromptResult,
 	ListScenariosResult,
+	PromptTemplate,
 	ScenarioId,
+	ScenarioToolResult,
 } from "./types/scenarios";
 
 /**
@@ -46,7 +48,12 @@ interface ServerWithSampling {
 }
 
 /**
- * All valid scenario IDs for validation.
+ * Maximum length of context summary to show in fallback question preview.
+ */
+const CONTEXT_PREVIEW_LENGTH = 100;
+
+/**
+ * All valid scenario IDs for validation in get_prompt tool.
  */
 const SCENARIO_IDS: [ScenarioId, ...ScenarioId[]] = [
 	"logic_is_too_complex",
@@ -67,10 +74,10 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 	});
 
 	async init() {
-		// Tool 1: list_scenarios
+		// 1. list_scenarios - Discovery tool that lists all scenarios with their tier
 		this.server.tool(
 			"list_scenarios",
-			"List available stuck-agent scenarios.",
+			"List all available stuck-agent scenarios with their tier (core/extended). Core scenarios are also directly available as individual tools.",
 			{},
 			async () => {
 				const result: ListScenariosResult = {
@@ -80,6 +87,7 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 							id,
 							title: template.title,
 							description: template.description,
+							tier: isCoreScenario(id) ? "core" : "extended",
 						};
 					}),
 				};
@@ -90,18 +98,86 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 			},
 		);
 
-		// Tool 2: get_static_prompt
+		// 2. Dynamically register tools for CORE scenarios only
+		for (const scenarioId of getCoreScenarioIds()) {
+			const template = getTemplate(scenarioId);
+			if (!template) continue;
+
+			this.server.tool(
+				scenarioId, // Tool name is the scenario ID
+				template.description, // Use scenario description as tool description
+				{
+					mode: z
+						.enum(["static", "sampling"])
+						.optional()
+						.default("static")
+						.describe(
+							"Choose 'static' for predefined prompts or 'sampling' for AI-generated questions. Default is 'static' for MCP clients that don't support sampling.",
+						),
+					contextSummary: z
+						.string()
+						.optional()
+						.describe(
+							"Required for 'sampling' mode: A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)",
+						),
+					maxQuestions: z
+						.number()
+						.int()
+						.min(1)
+						.max(10)
+						.optional()
+						.default(3)
+						.describe(
+							"For 'sampling' mode: Maximum number of questions to generate",
+						),
+				},
+				async ({ mode, contextSummary, maxQuestions }) => {
+					return handleScenarioRequest(
+						this.server,
+						scenarioId,
+						template,
+						mode,
+						contextSummary,
+						maxQuestions,
+					);
+				},
+			);
+		}
+
+		// 3. get_prompt - Generic tool for accessing any scenario (core or extended)
 		this.server.tool(
-			"get_static_prompt",
-			"Return a static prompt template for a given scenario.",
+			"get_prompt",
+			"Get prompt template for any scenario (core or extended) with optional mode. Use list_scenarios to discover available scenario IDs.",
 			{
 				scenario: z
 					.enum(SCENARIO_IDS)
 					.describe("The scenario ID to get the prompt for"),
+				mode: z
+					.enum(["static", "sampling"])
+					.optional()
+					.default("static")
+					.describe(
+						"Choose 'static' for predefined prompts or 'sampling' for AI-generated questions.",
+					),
+				contextSummary: z
+					.string()
+					.optional()
+					.describe(
+						"Required for 'sampling' mode: A summary of what the agent has been trying to do and why it's stuck",
+					),
+				maxQuestions: z
+					.number()
+					.int()
+					.min(1)
+					.max(10)
+					.optional()
+					.default(3)
+					.describe(
+						"For 'sampling' mode: Maximum number of questions to generate",
+					),
 			},
-			async ({ scenario }) => {
+			async ({ scenario, mode, contextSummary, maxQuestions }) => {
 				const template = getTemplate(scenario);
-
 				if (!template) {
 					return {
 						content: [
@@ -116,127 +192,145 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 					};
 				}
 
-				const result: GetStaticPromptResult = { template };
-
-				return {
-					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-				};
-			},
-		);
-
-		// Tool 3: generate_clarifying_questions (sampling-based)
-		this.server.tool(
-			"generate_clarifying_questions",
-			"Use MCP sampling to generate clarifying questions for a stuck agent based on the provided scenario and context summary.",
-			{
-				scenario: z.enum(SCENARIO_IDS).describe("The scenario ID for context"),
-				contextSummary: z
-					.string()
-					.describe(
-						"Short summary (~200-800 chars) of what the agent has been trying to do, error messages, and why it seems stuck.",
-					),
-				maxQuestions: z
-					.number()
-					.int()
-					.min(1)
-					.max(10)
-					.optional()
-					.default(3)
-					.describe("Maximum number of questions to generate"),
-			},
-			async ({ scenario, contextSummary, maxQuestions }) => {
-				const template = getTemplate(scenario);
-				const templateSummary = template
-					? `${template.title}: ${template.description}`
-					: `Scenario: ${scenario}`;
-
-				// Try to use MCP sampling if available
-				try {
-					// Check if sampling is supported by casting to the extended interface
-					const serverWithSampling = this
-						.server as unknown as ServerWithSampling;
-					if (
-						serverWithSampling &&
-						typeof serverWithSampling.sampling?.createMessage === "function"
-					) {
-						const samplingParams = {
-							messages: [
-								{
-									role: "user" as const,
-									content: {
-										type: "text" as const,
-										text: buildSamplingUserMessage({
-											scenario,
-											templateSummary,
-											contextSummary,
-											maxQuestions,
-										}),
-									},
-								},
-							],
-							systemPrompt: buildSamplingSystemPrompt({ scenario }),
-							maxTokens: 512,
-							includeContext: "none" as const,
-							modelPreferences: {
-								hints: [{ name: "claude-3" }],
-								speedPriority: 0.5,
-								costPriority: 0.3,
-								intelligencePriority: 0.8,
-							},
-						};
-
-						const samplingResult =
-							await serverWithSampling.sampling.createMessage(samplingParams);
-						const rawText =
-							samplingResult?.content?.type === "text"
-								? samplingResult.content.text
-								: "";
-
-						const questions = parseQuestionsFromSamplingResponse(
-							rawText,
-							maxQuestions,
-						);
-
-						const result: ClarifyingQuestionsResult = {
-							scenario,
-							questions,
-							rawSamplingResponse: rawText,
-						};
-
-						return {
-							content: [
-								{ type: "text", text: JSON.stringify(result, null, 2) },
-							],
-						};
-					}
-				} catch (error) {
-					// Sampling not available or failed, fall through to fallback
-					console.log(
-						"Sampling not available or failed, using fallback:",
-						error,
-					);
-				}
-
-				// Fallback: generate static questions based on template
-				const fallbackQuestions = generateFallbackQuestions(
+				return handleScenarioRequest(
+					this.server,
 					scenario,
 					template,
+					mode,
 					contextSummary,
+					maxQuestions,
 				);
-
-				const result: ClarifyingQuestionsResult = {
-					scenario,
-					questions: fallbackQuestions,
-					rawSamplingResponse:
-						"Sampling not available - using fallback questions",
-				};
-
-				return {
-					content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
-				};
 			},
 		);
 	}
+}
+
+/**
+ * Shared handler for scenario requests (used by both core tools and get_prompt).
+ */
+async function handleScenarioRequest(
+	server: McpServer,
+	scenarioId: ScenarioId,
+	template: PromptTemplate,
+	mode: "static" | "sampling",
+	contextSummary: string | undefined,
+	maxQuestions: number,
+): Promise<{
+	content: Array<{ type: "text"; text: string }>;
+	isError?: boolean;
+}> {
+	// Handle static mode (default)
+	if (mode === "static") {
+		const result: ScenarioToolResult = {
+			mode: "static",
+			template: template,
+		};
+
+		return {
+			content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+		};
+	}
+
+	// Handle sampling mode
+	// Validate that contextSummary is provided for sampling mode
+	if (!contextSummary) {
+		return {
+			content: [
+				{
+					type: "text",
+					text: JSON.stringify({
+						error:
+							"contextSummary is required when using 'sampling' mode. Please provide a summary of what the agent has been trying to do and why it's stuck.",
+					}),
+				},
+			],
+			isError: true,
+		};
+	}
+
+	const templateSummary = `${template.title}: ${template.description}`;
+
+	// Try to use MCP sampling if available
+	try {
+		// Check if sampling is supported by casting to the extended interface
+		const serverWithSampling = server as unknown as ServerWithSampling;
+		if (
+			serverWithSampling &&
+			typeof serverWithSampling.sampling?.createMessage === "function"
+		) {
+			const samplingParams = {
+				messages: [
+					{
+						role: "user" as const,
+						content: {
+							type: "text" as const,
+							text: buildSamplingUserMessage({
+								scenario: scenarioId,
+								templateSummary,
+								contextSummary,
+								maxQuestions,
+							}),
+						},
+					},
+				],
+				systemPrompt: buildSamplingSystemPrompt({
+					scenario: scenarioId,
+				}),
+				maxTokens: 512,
+				includeContext: "none" as const,
+				modelPreferences: {
+					hints: [{ name: "claude-3" }],
+					speedPriority: 0.5,
+					costPriority: 0.3,
+					intelligencePriority: 0.8,
+				},
+			};
+
+			const samplingResult =
+				await serverWithSampling.sampling.createMessage(samplingParams);
+			const rawText =
+				samplingResult?.content?.type === "text"
+					? samplingResult.content.text
+					: "";
+
+			const questions = parseQuestionsFromSamplingResponse(
+				rawText,
+				maxQuestions,
+			);
+
+			const result: ScenarioToolResult = {
+				mode: "sampling",
+				scenario: scenarioId,
+				questions,
+				rawSamplingResponse: rawText,
+			};
+
+			return {
+				content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+			};
+		}
+	} catch (error) {
+		// Sampling not available or failed, fall through to fallback
+		console.log("Sampling not available or failed, using fallback:", error);
+	}
+
+	// Fallback: generate static questions based on template
+	const fallbackQuestions = generateFallbackQuestions(
+		scenarioId,
+		template,
+		contextSummary,
+	);
+
+	const result: ScenarioToolResult = {
+		mode: "sampling",
+		scenario: scenarioId,
+		questions: fallbackQuestions,
+		rawSamplingResponse: "Sampling not available - using fallback questions",
+	};
+
+	return {
+		content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+	};
 }
 
 /**
@@ -304,7 +398,7 @@ function generateFallbackQuestions(
 			// Add context reference to make questions more specific
 			markdownQuestions[0] = {
 				...firstQuestion,
-				text: `Given the context: "${contextSummary.slice(0, 100)}..." ${firstQuestion.text}`,
+				text: `Given the context: "${contextSummary.slice(0, CONTEXT_PREVIEW_LENGTH)}..." ${firstQuestion.text}`,
 			};
 		}
 		return markdownQuestions;

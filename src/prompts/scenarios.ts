@@ -1,6 +1,6 @@
 // src/prompts/scenarios.ts
 // This file loads prompt templates from markdown files.
-// Community contributions should add new prompts in the prompts/{tool_name}/tool.md format.
+// Community contributions should add new prompts in the prompts/{core|extended}/{tool_name}/tool.md format.
 
 import type {
 	ClarifyingQuestion,
@@ -16,11 +16,15 @@ import {
 
 // Import markdown files as raw strings
 // In Cloudflare Workers, we need to embed these at build time
-import logicTooComplexMd from "../../prompts/logic_is_too_complex/tool.md";
-import bugFixFailedMd from "../../prompts/bug_fix_always_failed/tool.md";
-import analysisTooLongMd from "../../prompts/analysis_too_long/tool.md";
-import missingRequirementsMd from "../../prompts/missing_requirements/tool.md";
-import unclearAcceptanceMd from "../../prompts/unclear_acceptance_criteria/tool.md";
+
+// Core scenarios (auto-registered as direct MCP tools)
+import logicTooComplexMd from "../../prompts/core/logic_is_too_complex/tool.md";
+import bugFixFailedMd from "../../prompts/core/bug_fix_always_failed/tool.md";
+import missingRequirementsMd from "../../prompts/core/missing_requirements/tool.md";
+
+// Extended scenarios (discovered via list_scenarios, accessed via get_prompt)
+import analysisTooLongMd from "../../prompts/extended/analysis_too_long/tool.md";
+import unclearAcceptanceMd from "../../prompts/extended/unclear_acceptance_criteria/tool.md";
 
 /**
  * Raw markdown content for each scenario.
@@ -32,6 +36,29 @@ const SCENARIO_MARKDOWN: Record<ScenarioId, string> = {
 	missing_requirements: missingRequirementsMd,
 	unclear_acceptance_criteria: unclearAcceptanceMd,
 };
+
+/**
+ * Core scenario IDs that are exposed as direct MCP tools.
+ */
+const CORE_SCENARIO_IDS: ScenarioId[] = [
+	"logic_is_too_complex",
+	"bug_fix_always_failed",
+	"missing_requirements",
+];
+
+/**
+ * Get core scenario IDs (auto-registered as tools).
+ */
+export function getCoreScenarioIds(): ScenarioId[] {
+	return CORE_SCENARIO_IDS;
+}
+
+/**
+ * Check if a scenario is a core scenario.
+ */
+export function isCoreScenario(scenarioId: ScenarioId): boolean {
+	return CORE_SCENARIO_IDS.includes(scenarioId);
+}
 
 /**
  * Parsed tool definitions cache.
