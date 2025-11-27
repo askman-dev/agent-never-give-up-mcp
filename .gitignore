@@ -1,3 +1,5 @@
 node_modules
 .wrangler
 .dev.vars
+src/prompts/generated-scenarios.ts
+src/types/generated-scenarios.ts

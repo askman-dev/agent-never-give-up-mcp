@@ -1,5 +1,5 @@
 ---
-name: missing_requirements
+name: missing-requirements
 title: "Missing requirements"
 description: "Use this when you cannot proceed because requirements are missing or unclear, and you need to identify what information is needed."
 ---

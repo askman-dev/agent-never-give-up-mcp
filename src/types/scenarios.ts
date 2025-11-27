@@ -1,14 +1,11 @@
 // src/types/scenarios.ts
 
+import type { ScenarioId as GeneratedScenarioId } from "./generated-scenarios";
+
 /**
  * Supported scenario IDs for stuck-agent situations.
  */
-export type ScenarioId =
-	| "logic_is_too_complex"
-	| "bug_fix_always_failed"
-	| "analysis_too_long"
-	| "missing_requirements"
-	| "unclear_acceptance_criteria";
+export type ScenarioId = GeneratedScenarioId;
 
 /**
  * Scenario tier - determines how the scenario is exposed.
@@ -21,13 +18,13 @@ export type ScenarioTier = "core" | "extended";
  * A static prompt template for a given scenario.
  */
 export interface PromptTemplate {
-	scenario: ScenarioId;
-	title: string; // short human-readable name
-	description: string; // when to use this prompt
-	promptBody: string; // full prompt content (markdown body)
-	systemPrompt: string; // recommended system-level guidance
-	userPromptTemplate?: string; // optional user message template with placeholders
-	guidanceBullets?: string[]; // bullet points shown to user/agent
+        scenario: ScenarioId;
+        title: string; // short human-readable name
+        description: string; // when to use this prompt
+        promptBody: string; // full prompt content (markdown body)
+        systemPrompt: string; // recommended system-level guidance
+        userPromptTemplate?: string; // optional user message template with placeholders
+        guidanceBullets?: string[]; // bullet points shown to user/agent
 }
 
 /**
@@ -39,59 +36,59 @@ export type QuestionType = "free-text" | "single-choice" | "multi-choice";
  * An option for choice-type questions.
  */
 export interface ClarifyingQuestionOption {
-	id: string;
-	label: string;
+        id: string;
+        label: string;
 }
 
 /**
  * A clarifying question generated for a stuck agent.
  */
 export interface ClarifyingQuestion {
-	id: string; // stable per question
-	text: string;
-	type: QuestionType;
-	options?: ClarifyingQuestionOption[];
+        id: string; // stable per question
+        text: string;
+        type: QuestionType;
+        options?: ClarifyingQuestionOption[];
 }
 
 /**
  * Result of generating clarifying questions.
  */
 export interface ClarifyingQuestionsResult {
-	scenario: ScenarioId;
-	questions: ClarifyingQuestion[];
-	rawSamplingResponse?: string; // original text from sampling result for debugging (optional)
+        scenario: ScenarioId;
+        questions: ClarifyingQuestion[];
+        rawSamplingResponse?: string; // original text from sampling result for debugging (optional)
 }
 
 /**
  * Scenario metadata for listing.
  */
 export interface ScenarioMetadata {
-	id: ScenarioId;
-	title: string;
-	description: string;
-	tier: ScenarioTier;
+        id: ScenarioId;
+        title: string;
+        description: string;
+        tier: ScenarioTier;
 }
 
 /**
  * Result of listing scenarios.
  */
 export interface ListScenariosResult {
-	scenarios: ScenarioMetadata[];
+        scenarios: ScenarioMetadata[];
 }
 
 /**
  * Result of getting a static prompt.
  */
 export interface GetStaticPromptResult {
-	template: PromptTemplate;
+        template: PromptTemplate;
 }
 
 /**
  * A message in the LLM completion array format.
  */
 export interface PromptMessage {
-	role: "user";
-	content: string;
+        role: "user";
+        content: string;
 }
 
 /**
@@ -105,9 +102,9 @@ export type StaticToolResult = PromptMessage[];
  * Returns sampling-based questions.
  */
 export interface SamplingToolResult {
-	scenario: ScenarioId;
-	questions: ClarifyingQuestion[];
-	rawSamplingResponse?: string;
+        scenario: ScenarioId;
+        questions: ClarifyingQuestion[];
+        rawSamplingResponse?: string;
 }
 
 /**
@@ -116,9 +113,9 @@ export interface SamplingToolResult {
  * @deprecated Use StaticToolResult or SamplingToolResult instead
  */
 export interface ScenarioToolResult {
-	mode: "static" | "sampling";
-	template?: PromptTemplate; // Present when mode is "static"
-	scenario?: ScenarioId; // Present when mode is "sampling"
-	questions?: ClarifyingQuestion[]; // Present when mode is "sampling"
-	rawSamplingResponse?: string; // Present when mode is "sampling"
+        mode: "static" | "sampling";
+        template?: PromptTemplate; // Present when mode is "static"
+        scenario?: ScenarioId; // Present when mode is "sampling"
+        questions?: ClarifyingQuestion[]; // Present when mode is "sampling"
+        rawSamplingResponse?: string; // Present when mode is "sampling"
 }

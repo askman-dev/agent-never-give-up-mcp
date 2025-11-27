@@ -1,5 +1,5 @@
 ---
-name: logic_is_too_complex
+name: logic-is-too-complex
 title: "Logic is too complex / circular"
 description: "Use this when your reasoning is getting long, tangled, or circular, and you need a simple, structured way to reset and move forward."
 ---

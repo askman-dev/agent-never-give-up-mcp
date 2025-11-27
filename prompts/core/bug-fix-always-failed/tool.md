@@ -1,5 +1,5 @@
 ---
-name: bug_fix_always_failed
+name: bug-fix-always-failed
 title: "Bug fix keeps failing"
 description: "Use this when your bug fix attempts keep failing, and you need to break out of the loop with a fresh debugging strategy."
 ---

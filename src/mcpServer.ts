@@ -54,16 +54,11 @@ interface ServerWithSampling {
  */
 const CONTEXT_PREVIEW_LENGTH = 100;
 
-/**
- * All valid scenario IDs for validation in get_prompt tool.
- */
-const SCENARIO_IDS: [ScenarioId, ...ScenarioId[]] = [
-	"logic_is_too_complex",
-	"bug_fix_always_failed",
-	"analysis_too_long",
-	"missing_requirements",
-	"unclear_acceptance_criteria",
-];
+const SCENARIO_IDS = getAllScenarioIds();
+if (SCENARIO_IDS.length === 0) {
+        throw new Error("No scenarios discovered");
+}
+const SCENARIO_ID_ENUM = z.enum(SCENARIO_IDS as [ScenarioId, ...ScenarioId[]]);
 
 /**
  * Agent Never Give Up MCP - A remote MCP server that provides
@@ -140,9 +135,9 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 			"get_prompt",
 			"Get prompt template for any scenario (core or extended) with optional mode. Use list_scenarios to discover available scenario IDs.",
 			{
-				scenario: z
-					.enum(SCENARIO_IDS)
-					.describe("The scenario ID to get the prompt for"),
+                                scenario: SCENARIO_ID_ENUM.describe(
+                                        "The scenario ID to get the prompt for",
+                                ),
 				mode: z
 					.enum(["static", "sampling"])
 					.optional()

@@ -3,48 +3,31 @@
 // Community contributions should add new prompts in the prompts/{core|extended}/{tool_name}/tool.md format.
 
 import type {
-	ClarifyingQuestion,
-	PromptTemplate,
-	ScenarioId,
+        ClarifyingQuestion,
+        PromptTemplate,
+        ScenarioId,
 } from "../types/scenarios";
+import { DISCOVERED_SCENARIOS } from "./generated-scenarios";
 import {
-	type ParsedToolDefinition,
-	getFallbackQuestionsFromDefinition,
-	parseToolMarkdown,
-	toolDefinitionToTemplate,
+        type ParsedToolDefinition,
+        getFallbackQuestionsFromDefinition,
+        parseToolMarkdown,
+        toolDefinitionToTemplate,
 } from "./loader";
-
-// Import markdown files as raw strings
-// In Cloudflare Workers, we need to embed these at build time
-
-// Core scenarios (auto-registered as direct MCP tools)
-import logicTooComplexMd from "../../prompts/core/logic_is_too_complex/tool.md";
-import bugFixFailedMd from "../../prompts/core/bug_fix_always_failed/tool.md";
-import missingRequirementsMd from "../../prompts/core/missing_requirements/tool.md";
-
-// Extended scenarios (discovered via list_scenarios, accessed via get_prompt)
-import analysisTooLongMd from "../../prompts/extended/analysis_too_long/tool.md";
-import unclearAcceptanceMd from "../../prompts/extended/unclear_acceptance_criteria/tool.md";
 
 /**
  * Raw markdown content for each scenario.
  */
-const SCENARIO_MARKDOWN: Record<ScenarioId, string> = {
-	logic_is_too_complex: logicTooComplexMd,
-	bug_fix_always_failed: bugFixFailedMd,
-	analysis_too_long: analysisTooLongMd,
-	missing_requirements: missingRequirementsMd,
-	unclear_acceptance_criteria: unclearAcceptanceMd,
-};
+const SCENARIO_MARKDOWN: Record<ScenarioId, string> = Object.fromEntries(
+        DISCOVERED_SCENARIOS.map((scenario) => [scenario.id, scenario.markdown]),
+) as Record<ScenarioId, string>;
 
 /**
  * Core scenario IDs that are exposed as direct MCP tools.
  */
-const CORE_SCENARIO_IDS: ScenarioId[] = [
-	"logic_is_too_complex",
-	"bug_fix_always_failed",
-	"missing_requirements",
-];
+const CORE_SCENARIO_IDS: ScenarioId[] = DISCOVERED_SCENARIOS.filter(
+        (scenario) => scenario.tier === "core",
+).map((scenario) => scenario.id);
 
 /**
  * Get core scenario IDs (auto-registered as tools).
@@ -70,14 +53,17 @@ let parsedDefinitionsCache: Record<ScenarioId, ParsedToolDefinition> | null =
  * Get parsed tool definitions (lazy loaded).
  */
 function getParsedDefinitions(): Record<ScenarioId, ParsedToolDefinition> {
-	if (!parsedDefinitionsCache) {
-		parsedDefinitionsCache = {} as Record<ScenarioId, ParsedToolDefinition>;
-		for (const [scenarioId, markdown] of Object.entries(SCENARIO_MARKDOWN)) {
-			parsedDefinitionsCache[scenarioId as ScenarioId] =
-				parseToolMarkdown(markdown);
-		}
-	}
-	return parsedDefinitionsCache;
+        if (!parsedDefinitionsCache) {
+                parsedDefinitionsCache = {} as Record<ScenarioId, ParsedToolDefinition>;
+                for (const [scenarioId, markdown] of Object.entries(SCENARIO_MARKDOWN)) {
+                        const parsed = parseToolMarkdown(markdown);
+                        parsedDefinitionsCache[scenarioId as ScenarioId] = {
+                                ...parsed,
+                                name: scenarioId,
+                        };
+                }
+        }
+        return parsedDefinitionsCache;
 }
 
 /**
@@ -88,11 +74,14 @@ function buildScenarioTemplates(): Record<ScenarioId, PromptTemplate> {
 		ScenarioId,
 		PromptTemplate
 	>;
-	const definitions = getParsedDefinitions();
+        const definitions = getParsedDefinitions();
 
-	for (const [scenarioId, def] of Object.entries(definitions)) {
-		templates[scenarioId as ScenarioId] = toolDefinitionToTemplate(def);
-	}
+        for (const [scenarioId, def] of Object.entries(definitions)) {
+                templates[scenarioId as ScenarioId] = toolDefinitionToTemplate(
+                        def,
+                        scenarioId as ScenarioId,
+                );
+        }
 
 	return templates;
 }
