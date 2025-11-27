@@ -82,33 +82,42 @@ prompts/
 
 ### Prompt File Format
 
-Each `tool.md` file follows a simple markdown format with YAML frontmatter:
+Each `tool.md` file follows a simple markdown format with YAML frontmatter and a single protocol body:
 
 ```markdown
 ---
 name: scenario_name
 title: "Scenario Title"
-description: "When to use this scenario"
+description: "When / why the agent should call this tool, from the agent's perspective"
 ---
 
-## System Prompt
+When you notice [the trigger condition], follow this exact protocol step by step.
 
-Your system prompt content...
+## 1. First step title
 
-## User Prompt Template
+1. Action item one.
+2. Action item two.
+3. Action item three.
 
-Your user prompt template with {{context}} placeholder...
+Keep it concrete.
 
-## Guidance Bullets
+## 2. Second step title
 
-- First bullet point
-- Second bullet point
+...
 
-## Fallback Questions
+## 3. Third step title
 
-- First fallback question?
-- Second fallback question?
+...
 ```
+
+**Key principles:**
+- The `description` explains *when* to use the tool (the trigger condition)
+- The body is a *single protocol* with numbered sections
+- Each section has 2–6 concrete steps
+- Focus on *how to think*, not domain-specific details
+- No system prompt / user prompt template sections—just one actionable protocol
+
+See `prompts/AGENTS.md` for detailed guidance on writing effective prompts.
 
 ### Adding a New Scenario
 
@@ -210,7 +219,6 @@ Handle situations when requirements are unclear or missing.
 **Parameters** (same for all core scenario tools):
 - `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
 - `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)
-- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate (1-10)
 
 **Output (static mode)**:
 ```json
@@ -219,10 +227,7 @@ Handle situations when requirements are unclear or missing.
   "template": {
     "scenario": "logic_is_too_complex",
     "title": "Logic is too complex / circular",
-    "description": "...",
-    "systemPrompt": "...",
-    "userPromptTemplate": "...",
-    "guidanceBullets": [...]
+    "description": "Use this when your reasoning is getting long, tangled, or circular..."
   }
 }
 ```
@@ -279,7 +284,6 @@ Get prompt template for any scenario (core or extended). Use `list_scenarios` to
 - `scenario` (required): Scenario ID from `list_scenarios`
 - `mode` (optional, default: `"static"`): Choose `"static"` for predefined prompts or `"sampling"` for AI-generated questions
 - `contextSummary` (optional, required for `sampling` mode): A summary of what the agent has been trying to do and why it's stuck
-- `maxQuestions` (optional, default: `3`): For `sampling` mode, maximum number of questions to generate
 
 **Output**: Same format as core scenario tools
 

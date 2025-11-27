@@ -120,25 +120,14 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 						.describe(
 							"Required for 'sampling' mode: A summary of what the agent has been trying to do and why it's stuck (200-800 chars recommended)",
 						),
-					maxQuestions: z
-						.number()
-						.int()
-						.min(1)
-						.max(10)
-						.optional()
-						.default(3)
-						.describe(
-							"For 'sampling' mode: Maximum number of questions to generate",
-						),
 				},
-				async ({ mode, contextSummary, maxQuestions }) => {
+				async ({ mode, contextSummary }) => {
 					return handleScenarioRequest(
 						this.server,
 						scenarioId,
 						template,
 						mode,
 						contextSummary,
-						maxQuestions,
 					);
 				},
 			);
@@ -165,18 +154,8 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 					.describe(
 						"Required for 'sampling' mode: A summary of what the agent has been trying to do and why it's stuck",
 					),
-				maxQuestions: z
-					.number()
-					.int()
-					.min(1)
-					.max(10)
-					.optional()
-					.default(3)
-					.describe(
-						"For 'sampling' mode: Maximum number of questions to generate",
-					),
 			},
-			async ({ scenario, mode, contextSummary, maxQuestions }) => {
+			async ({ scenario, mode, contextSummary }) => {
 				const template = getTemplate(scenario);
 				if (!template) {
 					return {
@@ -198,7 +177,6 @@ export class AgentNeverGiveUpMCP extends McpAgent {
 					template,
 					mode,
 					contextSummary,
-					maxQuestions,
 				);
 			},
 		);
@@ -214,7 +192,6 @@ async function handleScenarioRequest(
 	template: PromptTemplate,
 	mode: "static" | "sampling",
 	contextSummary: string | undefined,
-	maxQuestions: number,
 ): Promise<{
 	content: Array<{ type: "text"; text: string }>;
 	isError?: boolean;
@@ -268,7 +245,6 @@ async function handleScenarioRequest(
 								scenario: scenarioId,
 								templateSummary,
 								contextSummary,
-								maxQuestions,
 							}),
 						},
 					},
@@ -293,10 +269,7 @@ async function handleScenarioRequest(
 					? samplingResult.content.text
 					: "";
 
-			const questions = parseQuestionsFromSamplingResponse(
-				rawText,
-				maxQuestions,
-			);
+			const questions = parseQuestionsFromSamplingResponse(rawText);
 
 			const result: ScenarioToolResult = {
 				mode: "sampling",
@@ -339,7 +312,6 @@ async function handleScenarioRequest(
  */
 function parseQuestionsFromSamplingResponse(
 	rawText: string,
-	maxQuestions: number,
 ): ClarifyingQuestion[] {
 	if (!rawText) {
 		return [];
@@ -358,7 +330,7 @@ function parseQuestionsFromSamplingResponse(
 				}>;
 			};
 			if (Array.isArray(parsed.questions)) {
-				return parsed.questions.slice(0, maxQuestions).map((q, idx) => ({
+				return parsed.questions.map((q, idx) => ({
 					id: q.id || `q${idx + 1}`,
 					text: q.text || String(q),
 					type: (q.type as ClarifyingQuestion["type"]) || "free-text",

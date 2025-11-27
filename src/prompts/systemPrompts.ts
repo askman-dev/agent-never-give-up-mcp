@@ -37,9 +37,8 @@ export function buildSamplingUserMessage(params: {
 	scenario: ScenarioId;
 	templateSummary: string;
 	contextSummary: string;
-	maxQuestions: number;
 }): string {
-	const { scenario, templateSummary, contextSummary, maxQuestions } = params;
+	const { scenario, templateSummary, contextSummary } = params;
 
 	return [
 		`Scenario id: ${scenario}`,
@@ -49,7 +48,5 @@ export function buildSamplingUserMessage(params: {
 		"",
 		"Context summary from the agent (reasoning, attempts, errors):",
 		contextSummary,
-		"",
-		`Please generate at most ${maxQuestions} questions.`,
 	].join("\n");
 }
