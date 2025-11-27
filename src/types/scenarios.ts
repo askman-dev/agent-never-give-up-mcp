@@ -53,7 +53,7 @@ export interface ClarifyingQuestionsResult {
 	scenario: ScenarioId;
 	language: string;
 	questions: ClarifyingQuestion[];
-	rawSamplingResponse: string; // original text from sampling result for debugging
+	rawSamplingResponse?: string; // original text from sampling result for debugging (optional)
 }
 
 /**

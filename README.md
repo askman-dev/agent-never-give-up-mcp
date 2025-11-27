@@ -25,6 +25,7 @@ The server does not detect these situations itself – the host/agent decides wh
   - `get_static_prompt` – get static prompt templates
   - `generate_clarifying_questions` – generate dynamic questions using MCP sampling
 - **Multi-language support** (English and Chinese)
+- **Community-contributed prompts** via markdown files
 - **Public and auth-less** (v0)
 - **Cloudflare Workers deployment**
 
@@ -51,6 +52,91 @@ npm run lint:fix
 ```
 
 The server will be available at `http://localhost:8787/sse`.
+
+## Contributing Prompts
+
+Prompts are stored in the `prompts/` directory with the structure:
+
+```
+prompts/
+├── logic_is_too_complex/
+│   └── tool.md
+├── bug_fix_always_failed/
+│   └── tool.md
+├── analysis_too_long/
+│   └── tool.md
+├── missing_requirements/
+│   └── tool.md
+└── unclear_acceptance_criteria/
+    └── tool.md
+```
+
+### Prompt File Format
+
+Each `tool.md` file follows the GitHub Copilot Agent markdown format with YAML frontmatter:
+
+```markdown
+---
+name: scenario_name
+title:
+  en: "English Title"
+  zh-CN: "中文标题"
+description:
+  en: "English description"
+  zh-CN: "中文描述"
+---
+
+## System Prompt
+
+### English
+
+Your system prompt in English...
+
+### 中文
+
+中文系统提示...
+
+## User Prompt Template
+
+### English
+
+Your user prompt template with {{context}} placeholder...
+
+### 中文
+
+中文用户提示模板...
+
+## Guidance Bullets
+
+### English
+
+- First bullet point
+- Second bullet point
+
+### 中文
+
+- 第一个要点
+- 第二个要点
+
+## Fallback Questions
+
+### English
+
+- First fallback question?
+- Second fallback question?
+
+### 中文
+
+- 第一个后备问题？
+- 第二个后备问题？
+```
+
+### Adding a New Scenario
+
+1. Create a new directory: `prompts/{scenario_name}/`
+2. Add a `tool.md` file following the format above
+3. Add the scenario ID to `src/types/scenarios.ts`
+4. Import and register the markdown file in `src/prompts/scenarios.ts`
 
 ## Deployment
 

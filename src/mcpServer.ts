@@ -5,6 +5,7 @@ import { McpAgent } from "agents/mcp";
 import { z } from "zod";
 import {
 	getAllScenarioIds,
+	getFallbackQuestions,
 	getTemplate,
 	SCENARIO_TEMPLATES,
 } from "./prompts/scenarios";
@@ -311,100 +312,34 @@ function parseQuestionsFromSamplingResponse(
 
 /**
  * Generate fallback questions when sampling is not available.
+ * Loads questions from the markdown tool definitions.
  */
 function generateFallbackQuestions(
 	scenario: ScenarioId,
 	template: ReturnType<typeof getTemplate>,
-	_contextSummary: string,
+	contextSummary: string,
 	language: string,
 ): ClarifyingQuestion[] {
+	// First try to get questions from markdown definitions
+	const markdownQuestions = getFallbackQuestions(scenario, language);
+	if (markdownQuestions.length > 0) {
+		// Optionally incorporate contextSummary into the first question
+		if (contextSummary && markdownQuestions.length > 0) {
+			const firstQuestion = markdownQuestions[0];
+			// Add context reference to make questions more specific
+			markdownQuestions[0] = {
+				...firstQuestion,
+				text:
+					language === "zh-CN"
+						? `基于以下情况：「${contextSummary.slice(0, 100)}...」${firstQuestion.text}`
+						: `Given the context: "${contextSummary.slice(0, 100)}..." ${firstQuestion.text}`,
+			};
+		}
+		return markdownQuestions;
+	}
+
+	// Fallback: If template has guidance bullets, use them to form questions
 	const isZhCN = language === "zh-CN";
-
-	// Generic fallback questions based on scenario
-	const fallbacksByScenario: Record<ScenarioId, ClarifyingQuestion[]> = {
-		logic_is_too_complex: [
-			{
-				id: "q1",
-				text: isZhCN
-					? "你能用一句话描述你的主要目标是什么吗？"
-					: "Can you describe your main goal in one sentence?",
-				type: "free-text",
-			},
-			{
-				id: "q2",
-				text: isZhCN
-					? "有哪些约束或限制我们必须遵守？"
-					: "What constraints or limitations must we work within?",
-				type: "free-text",
-			},
-		],
-		bug_fix_always_failed: [
-			{
-				id: "q1",
-				text: isZhCN
-					? "你能提供确切的错误消息或失败输出吗？"
-					: "Can you provide the exact error message or failure output?",
-				type: "free-text",
-			},
-			{
-				id: "q2",
-				text: isZhCN
-					? "这段代码以前工作过吗？如果是，最近有什么变化？"
-					: "Did this code work before? If so, what changed recently?",
-				type: "free-text",
-			},
-		],
-		analysis_too_long: [
-			{
-				id: "q1",
-				text: isZhCN
-					? "做出决定所需的最少信息是什么？"
-					: "What is the minimum information needed to make a decision?",
-				type: "free-text",
-			},
-			{
-				id: "q2",
-				text: isZhCN
-					? "我们是否可以做一个可逆的决定来继续前进？"
-					: "Can we make a reversible decision to move forward?",
-				type: "free-text",
-			},
-		],
-		missing_requirements: [
-			{
-				id: "q1",
-				text: isZhCN
-					? "你能列出目前已知的所有需求吗？"
-					: "Can you list all the requirements that are currently known?",
-				type: "free-text",
-			},
-			{
-				id: "q2",
-				text: isZhCN
-					? "谁是这个功能的主要利益相关者？"
-					: "Who are the main stakeholders for this feature?",
-				type: "free-text",
-			},
-		],
-		unclear_acceptance_criteria: [
-			{
-				id: "q1",
-				text: isZhCN
-					? "用户如何知道这个功能是否正常工作？"
-					: "How will the user know if this feature is working correctly?",
-				type: "free-text",
-			},
-			{
-				id: "q2",
-				text: isZhCN
-					? "有哪些边缘情况我们应该考虑？"
-					: "What edge cases should we consider?",
-				type: "free-text",
-			},
-		],
-	};
-
-	// If template has guidance bullets, use them to form questions
 	if (template?.guidanceBullets && template.guidanceBullets.length > 0) {
 		return template.guidanceBullets.slice(0, 3).map((bullet, idx) => ({
 			id: `q${idx + 1}`,
@@ -415,5 +350,14 @@ function generateFallbackQuestions(
 		}));
 	}
 
-	return fallbacksByScenario[scenario] || [];
+	// Default fallback questions
+	return [
+		{
+			id: "q1",
+			text: isZhCN
+				? "你能更详细地描述这个问题吗？"
+				: "Can you describe this problem in more detail?",
+			type: "free-text" as const,
+		},
+	];
 }
