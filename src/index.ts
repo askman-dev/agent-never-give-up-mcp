@@ -16,10 +16,10 @@ function validateOrigin(
 	env: Env & { ALLOWED_ORIGINS?: string },
 ): Response | null {
 	const origin = request.headers.get("Origin");
-	const allowedOriginsEnv = env.ALLOWED_ORIGINS;
+	const allowedOriginsEnv = env.ALLOWED_ORIGINS?.trim();
 
 	// If no ALLOWED_ORIGINS is configured or it's empty, allow all origins
-	if (!allowedOriginsEnv || allowedOriginsEnv.trim() === "") {
+	if (!allowedOriginsEnv) {
 		return null;
 	}
 
@@ -56,6 +56,9 @@ export default {
 		const url = new URL(request.url);
 
 		// MCP endpoint - handles both GET (stream) and POST (message) requests
+		// The serveSSE method from the SDK handles both paths:
+		// - GET /mcp - initializes SSE stream for receiving messages
+		// - POST /mcp/message - sends messages to the server
 		if (url.pathname === "/mcp" || url.pathname === "/mcp/message") {
 			// Validate Origin header
 			const originError = validateOrigin(request, env);
