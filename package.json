@@ -1,7 +1,12 @@
 {
 	"name": "agent-never-give-up-mcp",
 	"version": "0.1.0",
-	"private": true,
+	"mcpName": "io.github.askman-dev/agent-never-give-up",
+	"description": "An MCP server that acts as an escape guide for AI coding agents, providing structured thinking protocols to help agents unstuck themselves without human help.",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/askman-dev/agent-never-give-up-mcp.git"
+	},
 	"scripts": {
 		"deploy": "wrangler deploy",
 		"dev": "wrangler dev",
