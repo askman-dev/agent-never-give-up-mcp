@@ -60,7 +60,6 @@ for (const tier of tiers) {
 if (!ok) {
         console.error("Prompt checks failed.");
         process.exitCode = 1;
-        process.exit();
 }
 
 console.log("Prompt checks passed.");
