@@ -45,9 +45,23 @@ for (const tier of tiers) {
 
                 if (seen.has(id)) {
                         const existing = seen.get(id);
-                        if (existing === "core") {
+                        if (existing === tier) {
+                                console.error(
+                                        `Duplicate scenario id "${id}" found in tier "${tier}". Duplicate IDs within the same tier are not allowed.`,
+                                );
+                                ok = false;
+                                continue;
+                        } else if (tier === "core" && existing === "extended") {
+                                // Prefer core over extended, replace entry
                                 console.warn(
-                                        `Duplicate scenario id "${id}" found in tiers "${existing}" and "${tier}". Keeping core definition.`,
+                                        `Duplicate scenario id "${id}" found in tiers "extended" and "core". Preferring core definition.`,
+                                );
+                                seen.set(id, "core");
+                                continue;
+                        } else if (existing === "core" && tier === "extended") {
+                                // Keep core, warn
+                                console.warn(
+                                        `Duplicate scenario id "${id}" found in tiers "core" and "extended". Keeping core definition.`,
                                 );
                                 continue;
                         }
