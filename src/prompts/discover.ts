@@ -20,7 +20,7 @@ export function assertValidScenarioFolderName(folderName: string): string {
                 const message =
                         `Invalid scenario folder name: "${folderName}". ` +
                         "Names must match the pattern /^[a-z0-9]+(-[a-z0-9]+)*$/";
-                console.error(message);
+
                 throw new Error(message);
         }
 
