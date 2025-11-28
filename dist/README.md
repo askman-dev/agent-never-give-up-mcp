@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "agent-never-give-up-mcp" generated at 2025-11-28T04:50:23.111Z.
