@@ -9,12 +9,12 @@ if [ ! -d "$ROOT_DIR/.git/hooks" ]; then
         exit 0
 fi
 
-cat > "$HOOK_PATH" <<HOOK
+cat > "$HOOK_PATH" <<'HOOK'
 #!/usr/bin/env bash
 set -e
 set -euo pipefail
 
-ROOT_DIR="$ROOT_DIR"
+ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT_DIR"
 node scripts/check-prompts.js
 HOOK
