@@ -3,3 +3,4 @@ node_modules
 .dev.vars
 src/prompts/generated-scenarios.ts
 src/types/generated-scenarios.ts
+dist
