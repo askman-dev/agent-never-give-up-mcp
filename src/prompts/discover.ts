@@ -48,9 +48,19 @@ export function discoverScenarios(): DiscoveredScenario[] {
 
                         if (discovered.has(id)) {
                                 const existing = discovered.get(id)!;
-                                if (existing.tier === "core") {
+                                if (tier === "core" && existing.tier === "extended") {
+                                        console.warn(
+                                                `Duplicate scenario id "${id}" found in tiers "${existing.tier}" and "${tier}". Preferring core definition.`,
+                                        );
+                                        // Replace the extended version with the core version
+                                } else if (tier === "extended" && existing.tier === "core") {
                                         console.warn(
                                                 `Duplicate scenario id "${id}" found in tiers "${existing.tier}" and "${tier}". Keeping core definition.`,
+                                        );
+                                        continue;
+                                } else {
+                                        console.warn(
+                                                `Duplicate scenario id "${id}" found in tier "${tier}". Keeping first encountered definition.`,
                                         );
                                         continue;
                                 }
