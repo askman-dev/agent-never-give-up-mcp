@@ -12,7 +12,7 @@
     "prepare": "npm run generate:scenarios",
     "predev": "npm run generate:scenarios",
     "dev": "wrangler dev",
-    "setup:pre-commit": "bash scripts/install-pre-commit-hook.sh"
+    "setup:pre-commit": "bash scripts/install-pre-commit-hook.sh",
     "prestart": "npm run generate:scenarios",
     "start": "wrangler dev",
     "prebuild": "npm run generate:scenarios",
