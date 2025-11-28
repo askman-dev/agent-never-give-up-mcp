@@ -70,9 +70,16 @@ graph TD
     - `logic-is-too-complex` – for circular reasoning or over-complicated logic
     - `bug-fix-always-failed` – for repeated failed bug fix attempts
     - `missing-requirements` – for unclear or missing requirements
+    - `lost-main-objective` – for when current actions feel disconnected from the original goal
+    - `scope-creep-during-task` – for when changes expand beyond the original task scope
+    - `long-goal-partially-done` – for multi-step tasks where remaining work is forgotten
+    - `strategy-not-working` – for when the same approach fails repeatedly
   - **Extended scenarios** (discovered via `list_scenarios`, accessed via `get_prompt`):
     - `analysis-too-long` – for excessive analysis time
     - `unclear-acceptance-criteria` – for undefined acceptance criteria
+    - `wrong-level-of-detail` – for working at wrong abstraction level
+    - `constraints-cant-all-be-met` – for conflicting requirements or constraints
+    - `blocked-by-environment-limits` – for environmental blockers vs logic problems
 - **Discovery tools**:
   - `list_scenarios` – list all scenarios with their tier (core/extended)
   - `get_prompt` – access any scenario (core or extended)
