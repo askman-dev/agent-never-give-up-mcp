@@ -237,18 +237,17 @@ See `prompts/AGENTS.md` for detailed guidance on writing effective prompts.
 
 ### Adding a New Scenario
 
+Scenarios are auto-discovered from the `prompts/` tree and the generated files in `src/prompts/generated-scenarios.ts` and `src/types/generated-scenarios.ts`. You do **not** need to manually edit TypeScript files—just add the prompt and regenerate.
+
 **Core scenarios** (auto-registered as tools):
-1. Create a new directory: `prompts/core/{scenario_name}/`
-2. Add a `tool.md` file following the format above
-3. Add the scenario ID to `src/types/scenarios.ts`
-4. Import the markdown file in `src/prompts/scenarios.ts`
-5. Add the scenario ID to `CORE_SCENARIO_IDS` in `src/prompts/scenarios.ts`
+1. Create a new directory: `prompts/core/{scenario_name}/` (must match `/^[a-z0-9]+(-[a-z0-9]+)*$/`).
+2. Add a `tool.md` file following the format above.
+3. Run `npm run generate:scenarios` to regenerate types and discovery data.
 
 **Extended scenarios** (accessible via `get_prompt`):
-1. Create a new directory: `prompts/extended/{scenario_name}/`
-2. Add a `tool.md` file following the format above
-3. Add the scenario ID to `src/types/scenarios.ts`
-4. Import the markdown file in `src/prompts/scenarios.ts`
+1. Create a new directory: `prompts/extended/{scenario_name}/` (same naming rules as above).
+2. Add a `tool.md` file following the format above.
+3. Run `npm run generate:scenarios` to regenerate types and discovery data.
 
 ## Deploy
 
