@@ -11,6 +11,7 @@ fi
 
 cat > "$HOOK_PATH" <<HOOK
 #!/usr/bin/env bash
+set -e
 set -euo pipefail
 
 ROOT_DIR="$ROOT_DIR"
