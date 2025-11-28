@@ -11,7 +11,7 @@
                 "start": "wrangler dev",
                 "prebuild": "npm run generate:scenarios",
                 "build": "wrangler build",
-                "check:prompts": "tsx scripts/check-prompts.ts",
+                "check:prompts": "node scripts/check-prompts.js",
                 "format": "biome format --write",
                 "lint:fix": "biome lint --fix",
                 "cf-typegen": "wrangler types",

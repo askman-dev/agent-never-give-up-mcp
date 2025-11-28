@@ -9,9 +9,13 @@ if [ ! -d "$ROOT_DIR/.git/hooks" ]; then
         exit 0
 fi
 
-cat > "$HOOK_PATH" <<'HOOK'
+cat > "$HOOK_PATH" <<HOOK
 #!/usr/bin/env bash
-npm run --silent check:prompts
+set -euo pipefail
+
+ROOT_DIR="$ROOT_DIR"
+cd "$ROOT_DIR"
+node scripts/check-prompts.js
 HOOK
 
 chmod +x "$HOOK_PATH"
