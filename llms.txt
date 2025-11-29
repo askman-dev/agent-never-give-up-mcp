@@ -15,11 +15,13 @@
 **Purpose**: Entry point. Exports MCP class, handles routing, origin validation.
 
 ```
-validateOrigin(request: Request, env: Env): Response | null
+function validateOrigin(request: Request, env: Env): Response | null
   → Validates Origin header against ALLOWED_ORIGINS env var
   → Returns 403 Response or null (pass)
 
-default.fetch(request: Request, env: Env, ctx: ExecutionContext): Response | Promise<Response>
+export default {
+  fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response>
+}
   → Routes /mcp to AgentNeverGiveUpMCP.serve()
   → Routes /health to JSON status
   → Returns 404 for unknown paths
@@ -86,8 +88,14 @@ SCENARIO_TEMPLATES: Record<ScenarioId, PromptTemplate>
 
 ```
 interface ParsedToolDefinition {
-  name, title, description, promptBody, systemPrompt,
-  userPromptTemplate, guidanceBullets, fallbackQuestions: string[]
+  name: string
+  title: string
+  description: string
+  promptBody: string
+  systemPrompt: string
+  userPromptTemplate: string
+  guidanceBullets: string[]
+  fallbackQuestions: string[]
 }
 
 parseToolMarkdown(content: string): ParsedToolDefinition
