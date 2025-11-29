@@ -1,0 +1,303 @@
+# Agent Never Give Up MCP - LLM Context Documentation
+
+> An MCP server that helps AI coding agents escape stuck states via structured thinking protocols.
+
+## Project Goals
+
+**Primary**: Provide structured "escape" protocols for AI agents stuck in loops, analysis paralysis, or failed debugging.
+**Secondary**: Deploy as remote MCP server on Cloudflare Workers with dual-mode (static/sampling) prompt delivery.
+
+---
+
+## File Overview & Functions
+
+### src/index.ts
+**Purpose**: Entry point. Exports MCP class, handles routing, origin validation.
+
+```
+validateOrigin(request: Request, env: Env): Response | null
+  → Validates Origin header against ALLOWED_ORIGINS env var
+  → Returns 403 Response or null (pass)
+
+default.fetch(request: Request, env: Env, ctx: ExecutionContext): Response | Promise<Response>
+  → Routes /mcp to AgentNeverGiveUpMCP.serve()
+  → Routes /health to JSON status
+  → Returns 404 for unknown paths
+```
+
+### src/mcpServer.ts
+**Purpose**: Core MCP server. Registers tools, handles scenario requests.
+
+```
+class AgentNeverGiveUpMCP extends McpAgent
+  server: McpServer
+  async init(): void → Registers all MCP tools:
+    - list_scenarios: Lists all scenarios with tier (core/extended)
+    - [core scenario tools]: Direct tools for each core scenario
+    - get_prompt: Generic tool for any scenario
+
+handleScenarioRequest(
+  server: McpServer,
+  scenarioId: ScenarioId,
+  template: PromptTemplate,
+  mode: "static" | "sampling",
+  contextSummary: string | undefined
+): Promise<{ content: Array<{type: "text", text: string}>, isError?: boolean }>
+  → Static mode: Returns [{role: "user", content: promptBody}]
+  → Sampling mode: Uses MCP sampling or falls back to questions
+
+parseQuestionsFromSamplingResponse(rawText: string): ClarifyingQuestion[]
+  → Extracts JSON {questions: [...]} from sampling response
+  → Falls back to treating entire text as single question
+
+generateFallbackQuestions(
+  scenario: ScenarioId,
+  template: PromptTemplate,
+  contextSummary: string
+): ClarifyingQuestion[]
+  → Loads from markdown or generates from guidanceBullets
+```
+
+### src/prompts/scenarios.ts
+**Purpose**: Builds prompt templates from discovered markdown files.
+
+```
+getCoreScenarioIds(): ScenarioId[]
+  → Returns array of core scenario IDs (auto-registered as tools)
+
+isCoreScenario(scenarioId: ScenarioId): boolean
+  → Returns true if scenarioId is in core tier
+
+getAllScenarioIds(): ScenarioId[]
+  → Returns all scenario IDs (core + extended)
+
+getTemplate(scenarioId: ScenarioId): PromptTemplate | null
+  → Returns parsed template or null
+
+getFallbackQuestions(scenarioId: ScenarioId): ClarifyingQuestion[]
+  → Returns fallback questions from markdown definition
+
+SCENARIO_TEMPLATES: Record<ScenarioId, PromptTemplate>
+  → Exported map of all parsed templates
+```
+
+### src/prompts/loader.ts
+**Purpose**: Parses markdown tool definitions into structured templates.
+
+```
+interface ParsedToolDefinition {
+  name, title, description, promptBody, systemPrompt,
+  userPromptTemplate, guidanceBullets, fallbackQuestions: string[]
+}
+
+parseToolMarkdown(content: string): ParsedToolDefinition
+  → Parses YAML frontmatter (name, title, description)
+  → Extracts body as promptBody
+  → Extracts ## sections (system_prompt, guidance_bullets, etc.)
+
+toolDefinitionToTemplate(def: ParsedToolDefinition, scenarioId?: ScenarioId): PromptTemplate
+  → Converts parsed definition to PromptTemplate type
+
+getFallbackQuestionsFromDefinition(def: ParsedToolDefinition): ClarifyingQuestion[]
+  → Maps fallbackQuestions array to ClarifyingQuestion objects
+```
+
+### src/prompts/discover.ts
+**Purpose**: Discovers scenario folders at build time.
+
+```
+type ScenarioTier = "core" | "extended"
+const SCENARIO_ID_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
+
+assertValidScenarioFolderName(folderName: string): string
+  → Throws if name doesn't match pattern
+
+discoverScenarios(): DiscoveredScenario[]
+  → Walks prompts/core/ and prompts/extended/
+  → Returns array of {id, tier, markdown}
+  → Core takes precedence over extended on ID collision
+```
+
+### src/prompts/systemPrompts.ts
+**Purpose**: Builds prompts for MCP sampling mode.
+
+```
+buildSamplingSystemPrompt(_params: {scenario: ScenarioId}): string
+  → Returns system prompt instructing LLM to output JSON questions
+
+buildSamplingUserMessage(params: {
+  scenario: ScenarioId,
+  templateSummary: string,
+  contextSummary: string
+}): string
+  → Formats user message with scenario context
+```
+
+### src/types/scenarios.ts
+**Purpose**: Type definitions for scenarios, templates, questions.
+
+```
+type ScenarioId = (imported from generated-scenarios.ts)
+type ScenarioTier = "core" | "extended"
+type QuestionType = "free-text" | "single-choice" | "multi-choice"
+
+interface PromptTemplate {
+  scenario: ScenarioId, title: string, description: string,
+  promptBody: string, systemPrompt: string,
+  userPromptTemplate?: string, guidanceBullets?: string[]
+}
+
+interface ClarifyingQuestion {
+  id: string, text: string, type: QuestionType,
+  options?: ClarifyingQuestionOption[]
+}
+
+interface ScenarioMetadata { id, title, description, tier }
+interface ListScenariosResult { scenarios: ScenarioMetadata[] }
+type StaticToolResult = PromptMessage[]  // [{role: "user", content: string}]
+interface SamplingToolResult { scenario, questions, rawSamplingResponse? }
+```
+
+### src/agent/ClaudeAgent.ts
+**Purpose**: Claude Agent SDK wrapper for testing/integration.
+
+```
+type McpServerConfig = McpStdioServerConfig | McpSSEServerConfig | McpHttpServerConfig
+
+class ClaudeAgent {
+  constructor(config?: Partial<AgentConfig>)
+    → config: {model?, maxTurns?, cwd?, mcpServers?}
+
+  async run(systemPrompt: string, userPrompt: string): Promise<string>
+    → Executes agent loop via query() from claude-agent-sdk
+    → Handles message types: assistant, user, result
+    → Returns accumulated text responses
+}
+```
+
+### scripts/generate-scenarios.ts
+**Purpose**: Build script. Generates TypeScript from discovered scenarios.
+
+```
+Outputs:
+  - src/types/generated-scenarios.ts → type ScenarioId = "..." | "...";
+  - src/prompts/generated-scenarios.ts → DISCOVERED_SCENARIOS array
+```
+
+### scripts/check-prompts.js
+**Purpose**: Pre-commit validation for prompt folder structure.
+
+```
+Validates:
+  - Folder names match /^[a-z0-9]+(-[a-z0-9]+)*$/
+  - Each folder contains tool.md
+  - No duplicate IDs within same tier
+```
+
+### tests/test-mcp-server.ts
+**Purpose**: Integration test using Claude Agent SDK.
+
+```
+startLocalServer(): Promise<void>
+  → Spawns wrangler dev on port 8787
+
+testListMcpTools(): Promise<void>
+  → Creates ClaudeAgent with MCP server config
+  → Verifies expected tools appear in response
+```
+
+---
+
+## Prompt Data Format
+
+Each scenario is a markdown file at `prompts/{core|extended}/{scenario-name}/tool.md`:
+
+```markdown
+---
+name: scenario-name
+title: "Human Readable Title"
+description: "When/why agent should call this tool"
+---
+
+Protocol body (markdown). Structured steps for agent to follow.
+
+## 1. First Step
+1. Action item
+2. Action item
+
+## 2. Second Step
+...
+```
+
+Optional sections: `## System Prompt`, `## Guidance Bullets`, `## Fallback Questions`
+
+---
+
+## ASCII Connection Map
+
+```
++------------------+     +--------------------+     +-----------------+
+|  prompts/        |     | scripts/           |     | src/index.ts    |
+|  core/           |     | generate-          |---->| (Entry Point)   |
+|  extended/       |     | scenarios.ts       |     |                 |
++--------+---------+     +--------------------+     +--------+--------+
+         |                        |                          |
+         | (reads md)             | (generates)              | (routes /mcp)
+         v                        v                          v
++--------+---------+     +--------------------+     +--------+--------+
+| src/prompts/     |<----| src/types/         |     | src/mcpServer.ts|
+| discover.ts      |     | generated-         |<----| AgentNeverGiveUp|
+| loader.ts        |     | scenarios.ts       |     | MCP             |
+| scenarios.ts     |---->| src/prompts/       |     |                 |
+| systemPrompts.ts |     | generated-         |     +--------+--------+
++--------+---------+     | scenarios.ts       |              |
+         |               +--------------------+              |
+         |                                                   |
+         +---------------------------------------------------+
+                  (SCENARIO_TEMPLATES consumed by mcpServer)
+
++-------------------+     +----------------------+
+| src/agent/        |     | tests/               |
+| ClaudeAgent.ts    |<----| test-mcp-server.ts   |
+| (Test helper)     |     | (Integration tests)  |
++-------------------+     +----------------------+
+
+Cloudflare Workers Runtime:
++------------------------------------------------------------+
+| wrangler.jsonc → Durable Object: AgentNeverGiveUpMCP       |
+| worker-configuration.d.ts → Env types (MCP_OBJECT, etc.)   |
++------------------------------------------------------------+
+```
+
+---
+
+## Code Style Guide
+
+**Formatter**: Biome (indentWidth: 4, lineWidth: 100)
+**Linter**: Biome with recommended rules + strict style rules
+**TypeScript**: Strict mode, ES2021 target, bundler moduleResolution
+
+Conventions:
+- Use `type` imports for type-only imports
+- Avoid inferrable types, use explicit types where needed
+- No parameter reassignment
+- Prefer `as const` assertions
+- Use single var declarator per line
+- Self-closing elements when empty
+
+---
+
+## Project Structure Observations
+
+**Tiered Architecture**: Core scenarios are direct MCP tools; extended require `get_prompt`.
+**Build-time Discovery**: Scenarios auto-discovered from folder structure; no manual registration.
+**Dual Mode Design**: Static returns pre-written prompts; sampling uses LLM to generate questions.
+**Cloudflare First**: Durable Objects for MCP state; SQLite migrations defined in wrangler.jsonc.
+**Type Safety**: Generated types ensure scenario IDs are compile-time validated.
+
+**DRY Patterns**:
+- `handleScenarioRequest` shared between core tools and `get_prompt`
+- `SCENARIO_TEMPLATES` single source for all template data
+- `discoverScenarios` walks both tiers with unified logic
+
+**Extensibility**: Add new scenario by creating `prompts/{tier}/{name}/tool.md` and running `npm run generate:scenarios`.
